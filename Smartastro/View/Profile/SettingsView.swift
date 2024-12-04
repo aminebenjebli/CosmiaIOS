@@ -17,11 +17,7 @@ struct SettingsView: View {
 
             ScrollView {
                 VStack(spacing: 20) {
-                    Text("Settings")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .foregroundColor(.white)
-                        .padding(.top)
+
 
                     // Settings Options
                     VStack(spacing: 10) {
@@ -80,6 +76,7 @@ struct SettingsView: View {
                 .padding()
             }
         }
+        .cornerRadius(20)
         .background(
             NavigationLink(destination: Login(showSignup: .constant(false)), isActive: $navigateToLogin) {
                 EmptyView()
@@ -92,4 +89,7 @@ struct SettingsView: View {
         print("UserSession cleared.")
         navigateToLogin = true
     }
+}
+#Preview {
+    SettingsView()
 }

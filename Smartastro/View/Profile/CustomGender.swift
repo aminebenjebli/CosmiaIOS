@@ -4,55 +4,65 @@ struct CustomGender: View {
     @State private var selectedGender: String = "Select Gender"
     @State private var showDropdown: Bool = false
     let genders = ["Male", "Female", "Non-Binary", "Other"]
+    let genderIcons = ["Male": "person.fill", "Female": "person.fill", "Non-Binary": "person.2.fill", "Other": "questionmark.circle"]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            ZStack(alignment: .top) {
-                // Main button to toggle dropdown
-                Button(action: {
-                    withAnimation {
-                        showDropdown.toggle()
-                    }
-                }) {
-                    HStack {
-                        Text(selectedGender)
-                            .foregroundColor(selectedGender == "Select Gender" ? .gray : .purple)
-                        Spacer()
-                        Image(systemName: showDropdown ? "chevron.up" : "chevron.down")
-                            .foregroundColor(.gray)
-                    }
-                    .padding()
-                    .background(Color.gray.opacity(0.2))
-                    .cornerRadius(8)
+        ZStack(alignment: .topLeading) {
+            // Main button to toggle dropdown
+            Button(action: {
+                withAnimation {
+                    showDropdown.toggle()
                 }
+            }) {
+                HStack {
+                    if let icon = genderIcons[selectedGender] {
+                        Image(systemName: icon)
+                            .foregroundColor(.gray)
+                            .frame(width: 20, height: 20) // Add gender icon
+                    }
+                    Text(selectedGender)
+                        .foregroundColor(selectedGender == "Select Gender" ? .black : .black)
+                    Spacer()
+                    Image(systemName: showDropdown ? "chevron.up" : "chevron.down")
+                        .foregroundColor(.gray)
+                }
+                .padding()
+                .background(Color.white)
+                .cornerRadius(10)
+                .shadow(color: .black.opacity(0.2), radius: 5, x: 0, y: 5)
+            }
 
-                // Dropdown menu
-                if showDropdown {
-                    VStack(spacing: 0) {
-                        ForEach(genders, id: \.self) { gender in
-                            Button(action: {
-                                withAnimation {
-                                    selectedGender = gender
-                                    showDropdown = false
-                                }
-                            }) {
+            // Dropdown menu
+            if showDropdown {
+                VStack(spacing: 0) {
+                    ForEach(genders, id: \.self) { gender in
+                        Button(action: {
+                            withAnimation {
+                                selectedGender = gender
+                                showDropdown = false
+                            }
+                        }) {
+                            HStack {
+                                Image(systemName: genderIcons[gender] ?? "questionmark.circle")
+                                    .foregroundColor(.gray)
+                                    .frame(width: 20, height: 20) // Add icon for each gender
                                 Text(gender)
                                     .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding()
-                                    .background(Color.white)
+                                    .foregroundColor(.black)
                             }
-                            .buttonStyle(PlainButtonStyle())
+                            .padding()
+                            .background(Color.white)
                         }
+                        .buttonStyle(PlainButtonStyle())
                     }
-                    .background(Color.purple)
-                    .cornerRadius(8)
-                    .shadow(radius: 5)
-                    .offset(y: 60) // Adjusted offset to avoid overlapping
                 }
+                .background(Color.white)
+                .cornerRadius(10)
+                .shadow(color: .black.opacity(0.2), radius: 5, x: 0, y: 5)
+                .offset(y: 55) // Adjust dropdown position
             }
-            .background(Color.clear)
         }
-        .padding()
+        .zIndex(1) // Ensure dropdown appears above other views
     }
 }
 

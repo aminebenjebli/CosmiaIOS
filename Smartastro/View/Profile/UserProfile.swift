@@ -26,7 +26,7 @@ struct UserProfile: View {
             ScrollView {
                 VStack(spacing: 20) {
                     VStack(spacing: 8) {
-                        Image(determineZodiacImage(from: viewModel.dateOfBirth))
+                        Image(viewModel.determineZodiacImage(from: viewModel.dateOfBirth))
                             .resizable()
                             .frame(width: 100, height: 100)
                             .clipShape(Circle())
@@ -40,22 +40,23 @@ struct UserProfile: View {
                             .font(.subheadline)
                             .foregroundColor(.white)
 
-                        Text("DOB: \(viewModel.dateOfBirth.formatted(.dateTime.month().day().year()))")
+                        Text("Date Of Birth : \(viewModel.dateOfBirth.formatted(.dateTime.month().day().year()))")
                             .font(.subheadline)
-                            .foregroundColor(.white)
+                            .foregroundColor(.yellow)
                         
                     }
 
-                    HStack(spacing: 50) {
+                    HStack(spacing: 20) {
                         Button("Personal Info") {
                             showPersonalInfo = true
                         }
-                        .buttonStyle(InfoToggleStyle(isSelected: showPersonalInfo))
+                        .buttonStyle(SmallInfoToggleStyle(isSelected: showPersonalInfo))
+                        
 
                         Button("Settings") {
                             showPersonalInfo = false
                         }
-                        .buttonStyle(InfoToggleStyle(isSelected: !showPersonalInfo))
+                        .buttonStyle(SmallInfoToggleStyle(isSelected: !showPersonalInfo))
                     }
 
                     if showPersonalInfo {
@@ -73,24 +74,29 @@ struct UserProfile: View {
                                 displayedComponents: .date
                             )
                             .padding()
-                            .background(Color.gray.opacity(0.2))
+                            .background(Color.white)
                             .cornerRadius(10)
                             .accentColor(.white)
+                            .opacity(0.6)
                             //Gender
                             CustomGender()
-                            Spacer()
+                                .opacity(0.6)
+                            
+                            Spacer().frame(height: 30)
 
                             Button("Update Profile") {
                                 updateViewModel.updateUser { success in
                                     alertMessage = success ? "Profile updated successfully." : "Failed to update profile."
                                     showAlert = true
                                 }
+                                
                             }
                             .padding()
                             .frame(maxWidth: .infinity)
-                            .background(Color.appAstro)
-                            .foregroundColor(.white)
-                            .cornerRadius(10)
+                            .background(LinearGradient(gradient: Gradient(colors: [Color.purple.opacity(0.6), Color.black]),startPoint: .top,endPoint: .bottom))
+                            .foregroundColor(.yellow)
+                            .cornerRadius(15)
+                            .opacity(0.7)
                         }
                         .padding()
                     } else {
@@ -107,41 +113,7 @@ struct UserProfile: View {
         }
     }
 
-    func determineZodiacImage(from date: Date) -> String {
-        let zodiacImages = [
-            ("capricorn", (start: "12-22", end: "01-19")),
-            ("aquarius", (start: "01-20", end: "02-18")),
-            ("pisces", (start: "02-19", end: "03-20")),
-            ("aries", (start: "03-21", end: "04-19")),
-            ("taurus", (start: "04-20", end: "05-20")),
-            ("gemini", (start: "05-21", end: "06-20")),
-            ("cancer", (start: "06-21", end: "07-22")),
-            ("leo", (start: "07-23", end: "08-22")),
-            ("virgo", (start: "08-23", end: "09-22")),
-            ("libra", (start: "09-23", end: "10-22")),
-            ("scorpio", (start: "10-23", end: "11-21")),
-            ("sagittarius", (start: "11-22", end: "12-21"))
-        ]
-
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MM-dd"
-
-        let dateString = formatter.string(from: date)
-        let dateComponents = dateString.split(separator: "-").map { Int($0)! }
-
-        for (image, range) in zodiacImages {
-            let startComponents = range.start.split(separator: "-").map { Int($0)! }
-            let endComponents = range.end.split(separator: "-").map { Int($0)! }
-
-            if (dateComponents[0] == startComponents[0] && dateComponents[1] >= startComponents[1]) ||
-                (dateComponents[0] == endComponents[0] && dateComponents[1] <= endComponents[1]) ||
-                (startComponents[0] < endComponents[0] && (dateComponents[0] > startComponents[0] && dateComponents[0] < endComponents[0])) {
-                return image
-            }
-        }
-
-        return "aries"
-    }
+  
 }
 
 struct ZodiacAnimation2: View {
@@ -167,16 +139,19 @@ struct ZodiacAnimation2: View {
     }
 }
 
-struct InfoToggleStyle: ButtonStyle {
+struct SmallInfoToggleStyle: ButtonStyle {
     var isSelected: Bool
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .padding()
+            .padding(.vertical, 8) // Smaller vertical padding
+            .padding(.horizontal, 12) // Smaller horizontal padding
             .frame(maxWidth: .infinity)
-            .background(isSelected ? Color.appAstro : Color.gray)
+            .background(isSelected ? Color.appAstro.opacity(0.3) : Color.gray.opacity(0.3))
             .foregroundColor(.white)
-            .cornerRadius(10)
+            .cornerRadius(10) // Smaller corner radius
+            .shadow(color: .black.opacity(0.2), radius: 3, x: 0, y: 2)
+            
     }
 }
 
@@ -188,6 +163,7 @@ extension View {
             .cornerRadius(10)
             .shadow(color: .black.opacity(0.2), radius: 5, x: 0, y: 5)
             .foregroundColor(.black)
+            .opacity(0.6)
     }
 }
 
@@ -196,3 +172,6 @@ extension View {
         UserProfile(userId: "sampleUserId")
     }
 }
+//
+//
+//
