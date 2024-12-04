@@ -20,24 +20,27 @@ struct CustomBottomBar: View {
                     )
                 ) // Add specific rounded corners
 
-            HStack(spacing: 20) {
-                // Home Button
-                Button(action: {
-                    // Home button action
-                }) {
-                    Image(systemName: "house.fill")
-                        .font(.title)
-                        .foregroundColor(.white)
+            HStack {
+                // Group 1: Home and Feeds
+                HStack(spacing: 30) {
+                    // Home Button
+                    Button(action: {
+                        // Home button action
+                    }) {
+                        Image(systemName: "house.fill")
+                            .font(.title)
+                            .foregroundColor(.white)
+                    }
+
+                    // Feeds Button
+                    NavigationLink(destination: FeedsView()) {
+                        Image(systemName: "newspaper.fill")
+                            .font(.title)
+                            .foregroundColor(.white)
+                    }
                 }
 
-                // Feeds Button
-                NavigationLink(destination: FeedsView()) {
-                    Image(systemName: "newspaper.fill")
-                        .font(.title)
-                        .foregroundColor(.white)
-                }
-
-                Spacer()
+                Spacer(minLength: 50) // Create space between groups
 
                 // Camera Button (Center)
                 Button(action: {
@@ -53,22 +56,25 @@ struct CustomBottomBar: View {
                         )
                 }
 
-                Spacer()
+                Spacer(minLength: 50) // Create space between groups
 
-                // Heart Button
-                Button(action: {
-                    // Heart button action
-                }) {
-                    Image(systemName: "heart.fill")
-                        .font(.title)
-                        .foregroundColor(.white)
-                }
+                // Group 2: Heart and Profile
+                HStack(spacing: 30) {
+                    // Heart Button
+                    Button(action: {
+                        // Heart button action
+                    }) {
+                        Image(systemName: "heart.fill")
+                            .font(.title)
+                            .foregroundColor(.white)
+                    }
 
-                // Profile Button
-                NavigationLink(destination: UserProfile(userId: "sampleUserId")) {
-                    Image(systemName: "person.circle.fill")
-                        .font(.title)
-                        .foregroundColor(.white)
+                    // Profile Button
+                    NavigationLink(destination: UserProfile(userId: "sampleUserId")) {
+                        Image(systemName: "person.circle.fill")
+                            .font(.title)
+                            .foregroundColor(.white)
+                    }
                 }
             }
             .padding(.horizontal, 30)

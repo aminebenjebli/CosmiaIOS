@@ -12,10 +12,11 @@ struct HomeView: View {
                     Spacer()
                     CardStack() // Card stack integration
                     Spacer()
-                    CustomBottomBar() // Bottom navigation bar
+                    CustomBottomBar()
+                        .padding(.bottom, 0)// Bottom navigation bar
                 }
                 .navigationTitle("Home")
-                .padding()
+                .padding(.horizontal)
             }
         }
     }
