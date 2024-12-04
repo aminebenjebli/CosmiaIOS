@@ -8,7 +8,7 @@ class FeedsViewModel: ObservableObject {
     @Published var dailyImageURL: URL? // Image for the current horoscope
     @Published var newDailyImageURL: URL? // Image for the new horoscope
 
-    private let openAIAPIKey = "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"
+    private let openAIAPIKey = "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"
 
     init() {
         requestNotificationAuthorization()
