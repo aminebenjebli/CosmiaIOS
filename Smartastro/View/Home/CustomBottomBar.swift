@@ -20,7 +20,7 @@ struct CustomBottomBar: View {
                     )
                 ) // Add specific rounded corners
 
-            HStack(spacing: 30) {
+            HStack(spacing: 20) {
                 // Home Button
                 Button(action: {
                     // Home button action
