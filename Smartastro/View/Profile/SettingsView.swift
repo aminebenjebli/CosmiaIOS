@@ -3,6 +3,10 @@ import SwiftUI
 struct SettingsView: View {
     @State var showChangePassword: Bool = false
     @State var navigateToLogin: Bool = false
+    @State private var showAddImageView = false
+    @StateObject var albumViewModel = AlbumViewModel()
+    @State private var showSuccessMessage = false // To show success message
+    @State private var navigateToMyImagesView = false
 
     var body: some View {
         ZStack {
@@ -17,7 +21,7 @@ struct SettingsView: View {
 
             ScrollView {
                 VStack(spacing: 20) {
-
+                    
 
                     // Settings Options
                     VStack(spacing: 10) {
@@ -36,7 +40,38 @@ struct SettingsView: View {
                         SettingButton(title: "Contact Us", buttonColor: .appAstro, showArrow: true) {
                             // Navigate to Contact Us Page
                         }
+
+                        // Add to Album Button
+                        SettingButton(title: "Add to Album", buttonColor: .appAstro, showArrow: true) {
+                            showAddImageView.toggle()
+                        }
                     }
+
+                    // Show Add Image Toggle View
+                    if showAddImageView {
+                        AlbumView() // Embed the AlbumView here
+                    }
+                    
+                    // Show Success Message when album is saved
+                    if showSuccessMessage {
+                        Text("Album saved successfully!")
+                            .font(.headline)
+                            .foregroundColor(.green)
+                            .padding()
+                            .transition(.opacity)
+                            .animation(.easeIn, value: showSuccessMessage)
+                    }
+                    
+                    // My Album Button - Navigate to MyImagesView
+                    SettingButton(title: "My Album", buttonColor: .appAstro, showArrow: true) {
+                        navigateToMyImagesView.toggle() // Toggle to navigate to MyImagesView
+                    }
+                    .background(
+                        NavigationLink(destination: MyImagesView(), isActive: $navigateToMyImagesView) {
+                            EmptyView()
+                        }
+                        .hidden()
+                    )
 
                     Spacer()
 
@@ -83,7 +118,6 @@ struct SettingsView: View {
             }
         )
     }
-
     private func handleLogout() {
         SessionManager.shared.clearAllSessions()
         print("UserSession cleared.")
