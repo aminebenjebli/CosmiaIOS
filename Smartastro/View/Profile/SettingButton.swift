@@ -49,7 +49,7 @@ struct SettingButton: View {
 #Preview {
     VStack {
         SettingButton(title: "Change password", buttonColor: .blue, showArrow: true) {
-            print("Navigating to About Us...")
+            print("Navigating to Change Password...")
         }
         SettingButton(title: "Logout", buttonColor: .red, showArrow: false) {
             print("Logging out...")

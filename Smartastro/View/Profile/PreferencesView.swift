@@ -8,40 +8,58 @@ struct PreferencesView: View {
     let preferences = ["Sports", "Music", "Football", "Gym", "Reading", "Movies", "Travel", "Technology", "Art"]
     
     var body: some View {
-        VStack {
-            // Displaying selected preferences, showing up to 2 and appending "..." if there are more
-            HStack {
-                Text("Selected Preferences: ")
-                    .font(.headline)
-                    .foregroundColor(.black)
-                
+        VStack(alignment: .leading, spacing: 10) {
+            // Display selected preferences
+            Text("Selected preferences:")
+                .font(.headline)
+                .foregroundColor(.gray)
+            
+            if !selectedPreferences.isEmpty {
                 Text(displaySelectedPreferences())
-                    .foregroundColor(.gray)
-                    .italic()
-            }
-            .padding(.top)
-            
-            // Button to show modal
-            Button(action: {
-                showModal.toggle()
-            }) {
-                Text("+ Add Preferences")
                     .font(.body)
-                    .foregroundColor(.white)
-                    .padding()
-                    .background(Color.purple)
-                    .cornerRadius(10)
+                    .foregroundColor(.black)
+                    .italic()
+            } else {
+                Text("None")
+                    .font(.body)
+                    .foregroundColor(.gray)
             }
-            .padding(.top)
             
+            // Add Preferences Button
+            Button(action: {
+                withAnimation {
+                    showModal.toggle()
+                }
+            }) {
+                HStack {
+                    Image(systemName: "plus.circle")
+                        .font(.body)
+                        .foregroundColor(.black)
+                    Text("Add preferences")
+                        .font(.body)
+                        .foregroundColor(.black)
+                }
+                .padding(.vertical, 12) // Adjust padding for height
+                .frame(maxWidth: .infinity) // Stretch button width
+                .frame(height: 44) // Match height of other fields
+                .background(Color.clear) // Remove the background color
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.gray, lineWidth: 1)
+                )
+            }
+            .padding(.top, 5) // Reduce top padding to align vertically with other fields
+
             // Modal View
             if showModal {
                 ZStack {
                     // Background overlay
-                    Color.black.opacity(0.4)
+                    Color.black.opacity(0.6)
                         .edgesIgnoringSafeArea(.all)
                         .onTapGesture {
-                            showModal = false // Close modal when tapping outside
+                            withAnimation {
+                                showModal = false // Close modal when tapping outside
+                            }
                         }
                     
                     VStack {
@@ -51,7 +69,7 @@ struct PreferencesView: View {
                             .bold()
                             .padding(.bottom, 20)
                         
-                        // Buttons arranged in a grid of 3 per row
+                        // Preferences grid
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 20), count: 3), spacing: 20) {
                             ForEach(preferences, id: \.self) { preference in
                                 Button(action: {
@@ -60,32 +78,31 @@ struct PreferencesView: View {
                                     Text(preference)
                                         .font(.body)
                                         .padding(12)
-                                        .background(selectedPreferences.contains(preference) ? Color.purple : Color.gray.opacity(0.3))
+                                        .background(selectedPreferences.contains(preference) ? Color.indigo : Color.gray.opacity(0.2))
                                         .foregroundColor(.white)
                                         .cornerRadius(10)
                                         .overlay(
                                             RoundedRectangle(cornerRadius: 10)
-                                                .stroke(selectedPreferences.contains(preference) ? Color.purple : Color.gray.opacity(0.6), lineWidth: 2)
+                                                .stroke(selectedPreferences.contains(preference) ? Color.indigo : Color.gray.opacity(0.3), lineWidth: 1)
                                         )
-                                        .scaleEffect(selectedPreferences.contains(preference) ? 1.05 : 1)
-                                        .animation(.easeInOut(duration: 0.2), value: selectedPreferences)
                                 }
-                                .frame(height: 50)
                             }
                         }
                         .padding(.horizontal)
                         
-                        // Done button
+                        // Done Button
                         Button(action: {
-                            showModal = false
+                            withAnimation {
+                                showModal = false
+                            }
                         }) {
                             Text("Done")
                                 .font(.body)
                                 .padding()
-                                .background(Color.purple)
+                                .frame(maxWidth: .infinity)
+                                .background(Color.indigo)
                                 .foregroundColor(.white)
                                 .cornerRadius(10)
-                                .frame(maxWidth: .infinity)
                         }
                         .padding(.top, 20)
                     }
@@ -94,13 +111,13 @@ struct PreferencesView: View {
                     .cornerRadius(20)
                     .shadow(radius: 15)
                 }
+                .transition(.opacity)
             }
         }
-        .padding()
-        .background(LinearGradient(gradient: Gradient(colors: [Color.white, Color.gray.opacity(0.1)]), startPoint: .top, endPoint: .bottom).edgesIgnoringSafeArea(.all))
+        .padding(.horizontal)
     }
     
-    // Toggle selection of preference
+    // Toggle selection for preferences
     private func toggleSelection(for preference: String) {
         if selectedPreferences.contains(preference) {
             selectedPreferences.remove(preference)
@@ -109,16 +126,16 @@ struct PreferencesView: View {
         }
     }
     
-    // Display up to two selected preferences, appending "..." if there are more
+    // Display selected preferences as a comma-separated string
     private func displaySelectedPreferences() -> String {
         let preferencesArray = Array(selectedPreferences)
-        if preferencesArray.count > 2 {
-            return preferencesArray.prefix(2).joined(separator: ", ") + "..."
-        } else {
-            return preferencesArray.joined(separator: ", ")
+        if preferencesArray.isEmpty {
+            return "None"
         }
+        return preferencesArray.joined(separator: ", ")
     }
 }
+
 
 #Preview {
     PreferencesView()

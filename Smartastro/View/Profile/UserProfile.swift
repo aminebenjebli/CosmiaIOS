@@ -83,6 +83,10 @@ struct UserProfile: View {
                                 .opacity(0.6)
                             
                             Spacer().frame(height: 30)
+                            
+                            PreferencesView()
+                            
+                      
 
                             Button("Update Profile") {
                                 updateViewModel.updateUser { success in
