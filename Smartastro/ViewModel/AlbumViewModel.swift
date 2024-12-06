@@ -1,12 +1,17 @@
- import Combine
+import Combine
+import _PhotosUI_SwiftUI
 import UIKit
-
+struct IdentifiableImage: Identifiable {
+    let id: UUID
+    let image: UIImage
+}
 class AlbumViewModel: ObservableObject {
     @Published var selectedImages: [UIImage] = []
     @Published var isAlbumSaved: Bool = false // To track if album is saved successfully
     @Published var albumImages: [String] = []  // Array to hold image URLs
     @Published var isLoading: Bool = false // To indicate if album images are loading
     @Published var errorMessage: String? = nil // To show any errors
+    @Published var selectedPhotos: [PhotosPickerItem] = []  // Add this property
 
     private var cancellables = Set<AnyCancellable>()
     private let apiUrl = "http://localhost:3000/album" // Your backend URL
