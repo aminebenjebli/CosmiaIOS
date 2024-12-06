@@ -3,10 +3,9 @@ import SwiftUI
 struct SettingsView: View {
     @State var showChangePassword: Bool = false
     @State var navigateToLogin: Bool = false
-    @State private var showAddImageView = false
-    @StateObject var albumViewModel = AlbumViewModel()
-    @State private var showSuccessMessage = false // To show success message
+    @State private var navigateToAlbumView = false // Navigation state for AlbumView
     @State private var navigateToMyImagesView = false
+    @StateObject var albumViewModel = AlbumViewModel()
 
     var body: some View {
         ZStack {
@@ -21,50 +20,20 @@ struct SettingsView: View {
 
             ScrollView {
                 VStack(spacing: 20) {
-                    
-
-                    // Settings Options
-                    VStack(spacing: 10) {
-                        SettingButton(title: "Feedback & Support", buttonColor: .appAstro, showArrow: true) {
-                            // Navigate to Feedback & Support Page
-                        }
-                        SettingButton(title: "Terms & Conditions", buttonColor: .appAstro, showArrow: true) {
-                            // Navigate to Terms & Conditions Page
-                        }
-                        SettingButton(title: "Privacy", buttonColor: .appAstro, showArrow: true) {
-                            // Navigate to Privacy Page
-                        }
-                        SettingButton(title: "About Us", buttonColor: .appAstro, showArrow: true) {
-                            // Navigate to About Us Page
-                        }
-                        SettingButton(title: "Contact Us", buttonColor: .appAstro, showArrow: true) {
-                            // Navigate to Contact Us Page
-                        }
-
-                        // Add to Album Button
-                        SettingButton(title: "Add to Album", buttonColor: .appAstro, showArrow: true) {
-                            showAddImageView.toggle()
-                        }
+                    // Add to Album Button
+                    SettingButton(title: "Add Your Album", buttonColor: .appAstro, showArrow: true) {
+                        navigateToAlbumView = true
                     }
+                    .background(
+                        NavigationLink(destination: AlbumView(), isActive: $navigateToAlbumView) {
+                            EmptyView()
+                        }
+                        .hidden()
+                    )
 
-                    // Show Add Image Toggle View
-                    if showAddImageView {
-                        AlbumView() // Embed the AlbumView here
-                    }
-                    
-                    // Show Success Message when album is saved
-                    if showSuccessMessage {
-                        Text("Album saved successfully!")
-                            .font(.headline)
-                            .foregroundColor(.green)
-                            .padding()
-                            .transition(.opacity)
-                            .animation(.easeIn, value: showSuccessMessage)
-                    }
-                    
                     // My Album Button - Navigate to MyImagesView
                     SettingButton(title: "My Album", buttonColor: .appAstro, showArrow: true) {
-                        navigateToMyImagesView.toggle() // Toggle to navigate to MyImagesView
+                        navigateToMyImagesView = true
                     }
                     .background(
                         NavigationLink(destination: MyImagesView(), isActive: $navigateToMyImagesView) {
@@ -82,6 +51,21 @@ struct SettingsView: View {
                         }
                         SettingButton(title: "Change Password", buttonColor: .appAstro, showArrow: true) {
                             showChangePassword = true
+                        }
+                        SettingButton(title: "Feedback & Support", buttonColor: .appAstro, showArrow: true) {
+                            // Navigate to Feedback & Support Page
+                        }
+                        SettingButton(title: "Terms & Conditions", buttonColor: .appAstro, showArrow: true) {
+                            // Navigate to Terms & Conditions Page
+                        }
+                        SettingButton(title: "Privacy", buttonColor: .appAstro, showArrow: true) {
+                            // Navigate to Privacy Page
+                        }
+                        SettingButton(title: "About Us", buttonColor: .appAstro, showArrow: true) {
+                            // Navigate to About Us Page
+                        }
+                        SettingButton(title: "Contact Us", buttonColor: .appAstro, showArrow: true) {
+                            // Navigate to Contact Us Page
                         }
 
                         SettingButton(title: "Logout", buttonColor: .red, showArrow: false) {
@@ -118,12 +102,14 @@ struct SettingsView: View {
             }
         )
     }
+    
     private func handleLogout() {
         SessionManager.shared.clearAllSessions()
         print("UserSession cleared.")
         navigateToLogin = true
     }
 }
+
 #Preview {
     SettingsView()
 }

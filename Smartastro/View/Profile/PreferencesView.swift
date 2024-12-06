@@ -17,12 +17,12 @@ struct PreferencesView: View {
             if !selectedPreferences.isEmpty {
                 Text(displaySelectedPreferences())
                     .font(.body)
-                    .foregroundColor(.black)
+                    .foregroundColor(.white)
                     .italic()
             } else {
                 Text("None")
                     .font(.body)
-                    .foregroundColor(.gray)
+                    .foregroundColor(.black)
             }
             
             // Add Preferences Button
@@ -34,10 +34,10 @@ struct PreferencesView: View {
                 HStack {
                     Image(systemName: "plus.circle")
                         .font(.body)
-                        .foregroundColor(.black)
+                        .foregroundColor(.yellow)
                     Text("Add preferences")
                         .font(.body)
-                        .foregroundColor(.black)
+                        .foregroundColor(.yellow)
                 }
                 .padding(.vertical, 12) // Adjust padding for height
                 .frame(maxWidth: .infinity) // Stretch button width
