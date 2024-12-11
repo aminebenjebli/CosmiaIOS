@@ -23,9 +23,19 @@ class UserSession: ObservableObject {
         didSet {
             print("UserSession password updated: \(password != nil ? "******" : "nil")")
         }
+        
     }
 
-    private init() {}
+
+    private init() {
+            // Initialize userId from active session
+            if let activeSession = SessionManager.shared.getActiveSession() {
+                userId = activeSession.userId
+                print("Active session found: \(userId ?? "nil")")
+            } else {
+                print("No active session found.")
+            }
+        }
 
     func clearSession() {
         userId = nil

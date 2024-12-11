@@ -36,8 +36,6 @@ class SessionManager {
             print("Failed to save session: \(error.localizedDescription)")
         }
     }
-
-
     // MARK: - Retrieve Active Session
     func getActiveSession() -> Session? {
         let fetchRequest: NSFetchRequest<Session> = Session.fetchRequest()

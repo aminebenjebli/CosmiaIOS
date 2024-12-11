@@ -7,6 +7,7 @@ struct UserProfile: View {
     @State private var showAlert = false
     @State private var alertMessage = ""
     @State private var selectedGender: String = "Select Gender"
+    
     init(userId: String) {
         _viewModel = StateObject(wrappedValue: UserProfileViewModel(userId: userId))
         _updateViewModel = StateObject(wrappedValue: UpdateViewModel(userId: userId))

@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct HomeView: View {
+    @ObservedObject private var userSession = UserSession.shared // Observe UserSession for changes
+
     var body: some View {
         NavigationView {
             ZStack {
@@ -10,10 +12,18 @@ struct HomeView: View {
                     .edgesIgnoringSafeArea(.all)
                 VStack {
                     Spacer()
-                    CardStack() // Card stack integration
+                    // Ensure userId is updated correctly
+                    if let currentUserId = userSession.userId, !currentUserId.isEmpty {
+                        CardStack(userId: currentUserId) // Pass the userId to CardStack
+                    } else {
+                        Text("No user logged in.")
+                            .foregroundColor(.red)
+                            .font(.headline)
+                    }
+                    
                     Spacer()
                     CustomBottomBar()
-                        .padding(.bottom, 0)// Bottom navigation bar
+                        .padding(.bottom, 0) // Bottom navigation bar
                 }
                 .navigationTitle("Home")
                 .padding(.horizontal)
@@ -21,6 +31,8 @@ struct HomeView: View {
         }
     }
 }
+
+
 #Preview {
     HomeView()
 }

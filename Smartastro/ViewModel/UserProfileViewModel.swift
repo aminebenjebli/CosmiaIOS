@@ -229,4 +229,47 @@ class UserProfileViewModel: ObservableObject {
 
         return "Taurus"
     }
+    func likeUser(userId: String, likedUserId: String, completion: @escaping (Result<String, Error>) -> Void) {
+        print("[UserProfileViewModel] User \(userId) likes \(likedUserId)")
+        guard let url = URL(string: "http://localhost:3000/user/like") else {
+            completion(.failure(NSError(domain: "Invalid URL", code: 0, userInfo: nil)))
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let body: [String: String] = ["userId": userId, "likedUserId": likedUserId]
+        do {
+            request.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
+        } catch {
+            completion(.failure(error))
+            return
+        }
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    completion(.failure(error))
+                    return
+                }
+
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    completion(.failure(NSError(domain: "Invalid response from server", code: 0, userInfo: nil)))
+                    return
+                }
+
+                if httpResponse.statusCode == 201 {
+                    let message = "User liked successfully!"
+                    completion(.success(message))
+                } else {
+                    let errorMessage = "Unexpected response status: \(httpResponse.statusCode)"
+                    completion(.failure(NSError(domain: errorMessage, code: httpResponse.statusCode, userInfo: nil)))
+                }
+            }
+        }.resume()
+    }
+
+
 }
