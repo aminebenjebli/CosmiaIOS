@@ -25,7 +25,7 @@ struct CardStack: View {
                     let user = viewModel.users[index]
 
                     SwipeableCard(
-                        content: "\(user.username)\n(\(user.zodiacSign))",
+                        content: "\(user.username)\n\(user.zodiacSign)",
                         albumImages: user.albumImages, // Pass album images here
                         onSwipedLeft: {
                             print("Disliked: \(user.username)")

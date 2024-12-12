@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct SwipeableCard: View {
-    let content: String // User's name
+    let content: String // User's name and zodiac sign
     let albumImages: [String]? // Album images for the user
     let onSwipedLeft: () -> Void
     let onSwipedRight: () -> Void
@@ -36,48 +36,67 @@ struct SwipeableCard: View {
 
             // Overlay Content
             VStack {
-                Spacer()
+                    Spacer()
 
-                // User's Name
-                Text(content)
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-                    .padding(.bottom, 16)
+                            // User's Name and Zodiac Sign at the Bottom
+                            VStack(alignment: .leading, spacing: 4) {
+                                
+                                Text(content)
+                                    .font(.title3)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
+                            }
+                            .padding()
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .cornerRadius(20)
 
                 // Like and Dislike Buttons
-                HStack(spacing: 50) {
-                    Button(action: {
-                        withAnimation(.spring()) {
-                            offset = CGSize(width: -500, height: 0) // Simulate swipe left
-                        }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                            onSwipedLeft()
-                            resetPosition()
-                        }
-                    }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .resizable()
-                            .frame(width: 48, height: 48)
-                            .foregroundColor(.red)
-                    }
+                HStack {
+                    Spacer()
 
-                    Button(action: {
-                        withAnimation(.spring()) {
-                            offset = CGSize(width: 500, height: 0) // Simulate swipe right
+                    VStack(spacing: 50) {
+                        Button(action: {
+                            withAnimation(.spring()) {
+                                offset = CGSize(width: -500, height: 0) // Simulate swipe left
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                onSwipedLeft()
+                                resetPosition()
+                            }
+                        }) {
+                            Circle()
+                                .fill(Color.white)
+                                .frame(width: 60, height: 60)
+                                .shadow(radius: 5)
+                                .overlay(
+                                    Image(systemName: "xmark")
+                                        .foregroundColor(.red)
+                                        .font(.title)
+                                )
                         }
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                            onSwipedRight()
-                            resetPosition()
+
+                        Button(action: {
+                            withAnimation(.spring()) {
+                                offset = CGSize(width: 500, height: 0) // Simulate swipe right
+                            }
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                onSwipedRight()
+                                resetPosition()
+                            }
+                        }) {
+                            Circle()
+                                .fill(Color.white)
+                                .frame(width: 60, height: 60)
+                                .shadow(radius: 5)
+                                .overlay(
+                                    Image(systemName: "heart.fill")
+                                        .foregroundColor(.green)
+                                        .font(.title)
+                                )
                         }
-                    }) {
-                        Image(systemName: "heart.circle.fill")
-                            .resizable()
-                            .frame(width: 48, height: 48)
-                            .foregroundColor(.green)
                     }
+                    .padding(.trailing, 16)
                 }
-                .padding(.bottom, 16) // Add padding at the bottom
             }
         }
         .frame(width: 300, height: 400)
