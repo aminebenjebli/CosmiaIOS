@@ -246,7 +246,7 @@ class UserProfileViewModel: ObservableObject {
 
         return "Taurus"
     }
-    func likeUser(userId: String, likedUserId: String, completion: @escaping (Result<String, Error>) -> Void) {
+    func likeUser(userId: String, likedUserId: String, completion: @escaping (Result<User?, Error>) -> Void) {
         print("[UserProfileViewModel] User \(userId) likes \(likedUserId)")
         guard let url = URL(string: "http://localhost:3000/user/like") else {
             completion(.failure(NSError(domain: "Invalid URL", code: 0, userInfo: nil)))
@@ -272,21 +272,55 @@ class UserProfileViewModel: ObservableObject {
                     return
                 }
 
-                guard let httpResponse = response as? HTTPURLResponse else {
-                    completion(.failure(NSError(domain: "Invalid response from server", code: 0, userInfo: nil)))
+                guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 201 else {
+                    let errorMessage = "Unexpected response status: \((response as? HTTPURLResponse)?.statusCode ?? 0)"
+                    completion(.failure(NSError(domain: errorMessage, code: 0, userInfo: nil)))
                     return
                 }
 
-                if httpResponse.statusCode == 201 {
-                    let message = "User liked successfully!"
-                    completion(.success(message))
+                // Handle the response for a match or a like
+                if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                    print("Response from server: \(responseString)")
+                    if responseString.contains("It’s a match!") {
+                        self.fetchMatchedUser(likedUserId: likedUserId, completion: completion)
+                    } else {
+                        completion(.success(nil)) // Like without match
+                    }
                 } else {
-                    let errorMessage = "Unexpected response status: \(httpResponse.statusCode)"
-                    completion(.failure(NSError(domain: errorMessage, code: httpResponse.statusCode, userInfo: nil)))
+                    completion(.success(nil)) // Like without match
                 }
             }
         }.resume()
     }
+    private func fetchMatchedUser(likedUserId: String, completion: @escaping (Result<User?, Error>) -> Void) {
+        guard let url = URL(string: "http://localhost:3000/user/\(likedUserId)") else {
+            print("Invalid URL for fetching matched user")
+            return
+        }
+
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            DispatchQueue.main.async {
+                if let error = error {
+                    completion(.failure(error))
+                    return
+                }
+
+                guard let data = data else {
+                    completion(.failure(NSError(domain: "No data", code: 0, userInfo: nil)))
+                    return
+                }
+
+                do {
+                    let matchedUser = try JSONDecoder().decode(User.self, from: data)
+                    print("Fetched matched user: \(matchedUser.username)")
+                    completion(.success(matchedUser))
+                } catch {
+                    completion(.failure(error))
+                }
+            }
+        }.resume()
+    }
+
 
     
 

@@ -1,8 +1,6 @@
 import SwiftUI
 
 struct MatchView: View {
-    let userImage: String // URL or image name for the current user
-    let matchedUserImage: String // URL or image name for the matched user
     let matchedUserName: String // Name of the matched user
 
     var onSendMessage: () -> Void // Callback for Send Message action
@@ -10,12 +8,11 @@ struct MatchView: View {
 
     var body: some View {
         ZStack {
-            // Background Color
+            // Background Gradient
             LinearGradient(gradient: Gradient(colors: [Color.purple.opacity(0.6), Color.black]),
                            startPoint: .top,
                            endPoint: .bottom)
                 .edgesIgnoringSafeArea(.all)
-            
 
             VStack(spacing: 30) {
                 // Match Text
@@ -26,42 +23,9 @@ struct MatchView: View {
                         .foregroundColor(.white)
                         .padding(.bottom, 8)
 
-                    Text("You and \(matchedUserName) have liked each other.")
+                    Text("You and Ayouta have liked each other.")
                         .font(.body)
                         .foregroundColor(.white.opacity(0.8))
-                }
-
-                // User Images
-                HStack(spacing: 20) {
-                    // Current User Image
-                    AsyncImage(url: URL(string: userImage)) { image in
-                        image
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 100, height: 100)
-                            .clipShape(Circle())
-                            .overlay(Circle().stroke(Color.white, lineWidth: 4))
-                    } placeholder: {
-                        Circle()
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(width: 100, height: 100)
-                            .overlay(Text("You").foregroundColor(.white))
-                    }
-
-                    // Matched User Image
-                    AsyncImage(url: URL(string: matchedUserImage)) { image in
-                        image
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 100, height: 100)
-                            .clipShape(Circle())
-                            .overlay(Circle().stroke(Color.white, lineWidth: 4))
-                    } placeholder: {
-                        Circle()
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(width: 100, height: 100)
-                            .overlay(Text("Matched").foregroundColor(.white))
-                    }
                 }
 
                 // Action Buttons
@@ -93,7 +57,6 @@ struct MatchView: View {
                         .background(Color.indigo)
                         .cornerRadius(8)
                     }
-
                 }
                 .padding(.horizontal, 40)
             }
@@ -101,12 +64,3 @@ struct MatchView: View {
     }
 }
 
-#Preview {
-    MatchView(
-        userImage: "https://example.com/user.jpg",
-        matchedUserImage: "https://example.com/matched.jpg",
-        matchedUserName: "Jessica Parker",
-        onSendMessage: { print("Send Message tapped") },
-        onKeepSwiping: { print("Keep Swiping tapped") }
-    )
-}

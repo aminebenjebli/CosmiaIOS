@@ -2,6 +2,9 @@ import SwiftUI
 
 struct CardStack: View {
     @StateObject private var viewModel: UserProfileViewModel
+    @State private var currentUserName: String = "" // Store the current user's name
+    @State private var matchedUserName: String = "" // Store the matched user's name
+    @State private var showMatchView = false // Flag to show the MatchView
 
     init(userId: String) {
         _viewModel = StateObject(wrappedValue: UserProfileViewModel(userId: userId))
@@ -43,6 +46,14 @@ struct CardStack: View {
         .onAppear {
             viewModel.fetchAllUsersWithAlbums() // Fetch users and their albums
         }
+        .sheet(isPresented: $showMatchView) {
+            MatchView(
+
+                matchedUserName: matchedUserName,
+                onSendMessage: { print("Send Message tapped") },
+                onKeepSwiping: { showMatchView = false }
+            )
+        }
     }
 
     private func removeCard(at index: Int) {
@@ -59,8 +70,16 @@ struct CardStack: View {
         print("[CardStack] Liking user with ViewModel.userId: \(viewModel.userId), LikedUserId: \(likedUserId)")
         viewModel.likeUser(userId: viewModel.userId, likedUserId: likedUserId) { result in
             switch result {
-            case .success(let message):
-                print(message)
+            case .success(let matchedUser):
+                if let matchedUser = matchedUser {
+                    DispatchQueue.main.async {
+                        matchedUserName = user.username
+                        showMatchView = true
+                    }
+                    print("It's a match with \(matchedUser.username)!")
+                } else {
+                    print("User liked without a match.")
+                }
             case .failure(let error):
                 print("Error liking user: \(error.localizedDescription)")
             }
