@@ -1,10 +1,3 @@
-//
-//  StoryView.swift
-//  Smartastro
-//
-//  Created by AmineBj on 12/12/24.
-//
-
 import SwiftUI
 
 struct StoryView: View {
