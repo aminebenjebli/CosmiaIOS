@@ -6,7 +6,6 @@ struct CardStack: View {
     init(userId: String) {
         _viewModel = StateObject(wrappedValue: UserProfileViewModel(userId: userId))
     }
-    
 
     var body: some View {
         ZStack {
@@ -24,9 +23,10 @@ struct CardStack: View {
             } else {
                 ForEach(viewModel.users.indices.reversed(), id: \.self) { index in
                     let user = viewModel.users[index]
+
                     SwipeableCard(
                         content: "\(user.username)\n(\(user.zodiacSign))",
-                        image: user.image ?? "person.circle", // Use user image if available
+                        albumImages: user.albumImages, // Pass album images here
                         onSwipedLeft: {
                             print("Disliked: \(user.username)")
                             removeCard(at: index)
@@ -35,13 +35,13 @@ struct CardStack: View {
                             handleLike(user: user, at: index)
                         }
                     )
-                    .zIndex(Double(index)) // Ensure cards are stacked
+                    .zIndex(Double(index)) // Ensure proper stacking
                 }
             }
         }
         .padding()
         .onAppear {
-            viewModel.fetchAllUsers()
+            viewModel.fetchAllUsersWithAlbums() // Fetch users and their albums
         }
     }
 
@@ -56,7 +56,6 @@ struct CardStack: View {
             return
         }
 
-        // Use the userId stored in the ViewModel
         print("[CardStack] Liking user with ViewModel.userId: \(viewModel.userId), LikedUserId: \(likedUserId)")
         viewModel.likeUser(userId: viewModel.userId, likedUserId: likedUserId) { result in
             switch result {

@@ -13,7 +13,9 @@ class UserProfileViewModel: ObservableObject {
     @Published var successMessage: String? = nil
     @Published var isUpdating: Bool = false
     @Published var isLoading: Bool = false
-    @Published var shouldRedirectToLogin = false // Navigation trigger
+    @Published var shouldRedirectToLogin = false // Navigation trigger// API backend for album
+    
+    private let apiUrl = "http://localhost:3000" // Base API URL
 
     private var cancellables = Set<AnyCancellable>()
     let userId: String
@@ -164,36 +166,51 @@ class UserProfileViewModel: ObservableObject {
     
     
     
-    func fetchAllUsers() {
-           guard let url = URL(string: "http://localhost:3000/user/get") else {
-               errorMessage = "Invalid URL for fetching users"
-               return
-           }
-
-           isLoading = true
-           URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
-               DispatchQueue.main.async {
-                   self?.isLoading = false
-                   if let error = error {
-                       self?.errorMessage = "Failed to fetch users: \(error.localizedDescription)"
-                       return
-                   }
-
-                   guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200,
-                         let data = data else {
-                       self?.errorMessage = "Failed to parse user data"
-                       return
-                   }
-
-                   do {
-                       let usersResponse = try JSONDecoder().decode([User].self, from: data)
-                       self?.users = usersResponse
-                   } catch {
-                       self?.errorMessage = "Error decoding user data: \(error.localizedDescription)"
-                   }
-               }
-           }.resume()
-       }
+    func fetchAllUsersWithAlbums() {
+            guard let url = URL(string: "\(apiUrl)/user/get") else {
+                errorMessage = "Invalid URL for fetching users"
+                return
+            }
+            
+            isLoading = true
+            URLSession.shared.dataTaskPublisher(for: url)
+                .map(\.data)
+                .decode(type: [User].self, decoder: JSONDecoder())
+                .flatMap { users -> AnyPublisher<[User], Never> in
+                    // Fetch album images for each user
+                    let fetchAlbums = users.map { self.fetchAlbums(for: $0) }
+                    return Publishers.MergeMany(fetchAlbums)
+                        .collect()
+                        .eraseToAnyPublisher()
+                }
+                .receive(on: DispatchQueue.main)
+                .sink(receiveCompletion: { [weak self] completion in
+                    self?.isLoading = false
+                    if case .failure(let error) = completion {
+                        self?.errorMessage = "Failed to fetch users: \(error.localizedDescription)"
+                    }
+                }, receiveValue: { [weak self] usersWithAlbums in
+                    self?.users = usersWithAlbums
+                })
+                .store(in: &cancellables)
+        }
+        
+        private func fetchAlbums(for user: User) -> AnyPublisher<User, Never> {
+            guard let url = URL(string: "\(apiUrl)/album/\(user.email)") else {
+                return Just(user).eraseToAnyPublisher()
+            }
+            
+            return URLSession.shared.dataTaskPublisher(for: url)
+                .map(\.data)
+                .decode(type: [Album].self, decoder: JSONDecoder())
+                .map { albums in
+                    var updatedUser = user
+                    updatedUser.albumImages = albums.map { $0.image } // Extract album image URLs
+                    return updatedUser
+                }
+                .replaceError(with: user) // If an error occurs, return the user without album images
+                .eraseToAnyPublisher()
+        }
     func determineZodiacImage(from date: Date) -> String {
         let zodiacImages = [
             ("capricorn", (start: "12-22", end: "01-19")),
@@ -271,5 +288,6 @@ class UserProfileViewModel: ObservableObject {
         }.resume()
     }
 
+    
 
 }

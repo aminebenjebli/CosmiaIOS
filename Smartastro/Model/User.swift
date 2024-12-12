@@ -8,7 +8,7 @@ struct User: Codable {
     var password: String
     var dateOfBirth: String
     var image: String?
-
+    var albumImages: [String]?
     // Computed property, not part of Codable
     var zodiacSign: String {
         ZodiacHelper.determineZodiacSign(from: dateOfBirth)

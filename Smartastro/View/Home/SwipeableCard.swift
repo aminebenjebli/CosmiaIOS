@@ -2,41 +2,51 @@ import SwiftUI
 
 struct SwipeableCard: View {
     let content: String // User's name
-    let image: String // Image name or URL
+    let albumImages: [String]? // Album images for the user
     let onSwipedLeft: () -> Void
     let onSwipedRight: () -> Void
 
     @State private var offset = CGSize.zero
-    @State private var isAnimating = false
+    @State private var showAlbumModal = false // State to show the album modal
 
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color.white)
-                .shadow(radius: 5)
+            // Background Image
+            ZStack {
+                if let albumImages = albumImages, let firstImageUrl = albumImages.first {
+                    AsyncImage(url: URL(string: firstImageUrl)) { image in
+                        image
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 300, height: 400)
+                            .cornerRadius(20)
+                            .clipped()
+                    } placeholder: {
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(Color.gray.opacity(0.3))
+                            .overlay(Text("Loading...").foregroundColor(.white))
+                    }
+                } else {
+                    // Fallback if no album images are available
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(Color.gray.opacity(0.3))
+                        .overlay(Text("No Album").foregroundColor(.white))
+                }
+            }
 
+            // Overlay Content
             VStack {
                 Spacer()
-
-                // Image Section
-                Image(systemName: image)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 150, height: 150)
-                    .clipShape(Circle())
-                    .overlay(Circle().stroke(Color.purple, lineWidth: 4))
-                    .padding()
 
                 // User's Name
                 Text(content)
                     .font(.title2)
                     .fontWeight(.bold)
-                    .foregroundColor(.black)
-
-                Spacer()
+                    .foregroundColor(.white)
+                    .padding(.bottom, 16)
 
                 // Like and Dislike Buttons
-                HStack(spacing: 50) { // Add spacing between buttons
+                HStack(spacing: 50) {
                     Button(action: {
                         withAnimation(.spring()) {
                             offset = CGSize(width: -500, height: 0) // Simulate swipe left
@@ -69,7 +79,6 @@ struct SwipeableCard: View {
                 }
                 .padding(.bottom, 16) // Add padding at the bottom
             }
-            .padding()
         }
         .frame(width: 300, height: 400)
         .offset(x: offset.width, y: 0)
@@ -89,6 +98,15 @@ struct SwipeableCard: View {
                 }
         )
         .animation(.spring(), value: offset)
+        .onTapGesture {
+            // Show the album modal on tap
+            if let albumImages = albumImages, !albumImages.isEmpty {
+                showAlbumModal = true
+            }
+        }
+        .sheet(isPresented: $showAlbumModal) {
+            AlbumModalView(albumImages: albumImages ?? [])
+        }
     }
 
     private func resetPosition() {
