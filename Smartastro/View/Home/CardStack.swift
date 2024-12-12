@@ -73,7 +73,7 @@ struct CardStack: View {
             case .success(let matchedUser):
                 if let matchedUser = matchedUser {
                     DispatchQueue.main.async {
-                        matchedUserName = user.username
+                        matchedUserName = matchedUser.username
                         showMatchView = true
                     }
                     print("It's a match with \(matchedUser.username)!")

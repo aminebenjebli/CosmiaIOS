@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct MatchView: View {
+
     let matchedUserName: String // Name of the matched user
 
     var onSendMessage: () -> Void // Callback for Send Message action
