@@ -43,3 +43,9 @@ extension Font {
 extension Notification.Name {
     static let userLoggedOut = Notification.Name("userLoggedOut")
 }
+// MARK: Safe Array Subscript Extension
+extension Collection {
+    subscript(safe index: Index) -> Element? {
+        return indices.contains(index) ? self[index] : nil
+    }
+}
