@@ -12,11 +12,10 @@ struct StoryView: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .top) {
-                // Display the current story image based on progress
+                // Display current story image
                 if let imageURL = URL(string: images[safe: Int(countTimer.progress)] ?? "") {
                     AsyncImage(url: imageURL) { image in
-                        image
-                            .resizable()
+                        image.resizable()
                             .scaledToFill()
                             .frame(width: geometry.size.width, height: geometry.size.height)
                             .edgesIgnoringSafeArea(.all)
@@ -25,29 +24,30 @@ struct StoryView: View {
                     }
                 }
 
-                // Loading Bars for Story Progress
-                HStack(alignment: .center, spacing: 4) {
+                // Loading Bars
+                HStack(spacing: 4) {
                     ForEach(images.indices, id: \.self) { index in
                         LoadingBar(progress: min(max(CGFloat(countTimer.progress) - CGFloat(index), 0.0), 1.0))
-                            .frame(height: 2)
+                            .frame(height: 3)
                     }
                 }
-                .padding()
-                .background(Color.black.opacity(0.4))
+                .padding(.horizontal)
+                .padding(.top, 20)
+                .background(Color.black.opacity(0.2))
 
-                // Tap Areas for Navigation
+                // Tap to Navigate
                 HStack {
                     Rectangle()
                         .foregroundColor(.clear)
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            countTimer.advancePage(by: -1) // Go to the previous image
+                            countTimer.advancePage(by: -1)
                         }
                     Rectangle()
                         .foregroundColor(.clear)
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            countTimer.advancePage(by: 1) // Go to the next image
+                            countTimer.advancePage(by: 1)
                         }
                 }
             }

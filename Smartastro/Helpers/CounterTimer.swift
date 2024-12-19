@@ -19,8 +19,7 @@ class CountTimer: ObservableObject {
         self.cancellable = self.publisher.autoconnect().sink { _ in
             var newProgress = self.progress + (0.1 / self.interval)
             if Int(newProgress) >= self.max {
-                newProgress = Double(self.max - 1) // Stay at the last image
-                self.stop() // Stop timer at the end
+                self.stop() // Stop timer when the last image is reached
             }
             self.progress = newProgress
         }
