@@ -321,7 +321,4 @@ class UserProfileViewModel: ObservableObject {
         }.resume()
     }
 
-
-    
-
 }

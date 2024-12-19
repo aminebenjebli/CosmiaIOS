@@ -109,6 +109,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				272E35CC2CE38BBC00933BAB /* XCRemoteSwiftPackageReference "realm-swift" */,
+				27A4AA5C2D14C5ED00E37964 /* XCRemoteSwiftPackageReference "socket" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 272E35912CE3862800933BAB /* Products */;
@@ -350,6 +351,14 @@
 			requirement = {
 				branch = master;
 				kind = branch;
+			};
+		};
+		27A4AA5C2D14C5ED00E37964 /* XCRemoteSwiftPackageReference "socket" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/socketio/socket.io-client-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
