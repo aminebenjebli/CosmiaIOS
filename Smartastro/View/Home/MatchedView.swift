@@ -26,10 +26,13 @@ struct MatchedView: View {
             .onAppear {
                 viewModel.fetchMatches()
             }
+            .navigationBarBackButtonHidden(true) // Hide default back button
+           
+            }
             .navigationTitle("Your Matches")
         }
     }
-}
+
 
 struct BackgroundGradientView: View {
     var body: some View {
@@ -81,7 +84,7 @@ struct MatchesGridView: View {
                         destination: ChatView(
                             viewModel: ChatViewModel(),
                             receiverId: user.id ?? "",
-                            receiverUsername: user.username // Pass the username to ChatView
+                            receiverUsername: user.username
                         )
                     ) {
                         MatchedUserView(user: user)
@@ -97,31 +100,63 @@ struct MatchedUserView: View {
     let user: User
 
     var body: some View {
-        VStack {
+        VStack(spacing: 8) {
             if let imageUrl = user.albumImages?.first, let url = URL(string: imageUrl) {
                 AsyncImage(url: url) { image in
                     image
                         .resizable()
-                        .scaledToFit()
-                        .frame(width: 100, height: 100)
+                        .scaledToFill()
+                        .frame(width: 120, height: 120)
                         .clipShape(Circle())
+                        .overlay(Circle().stroke(Color.white, lineWidth: 3))
+                        .shadow(radius: 5)
                 } placeholder: {
                     ProgressView()
-                        .frame(width: 100, height: 100)
+                        .frame(width: 120, height: 120)
                 }
             } else {
-                Circle()
-                    .fill(Color.gray.opacity(0.3))
-                    .frame(width: 100, height: 100)
+                Image(systemName: "person.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 120, height: 120)
+                    .foregroundColor(.white)
+                    .background(Circle().fill(Color.gray.opacity(0.4)))
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.indigo, lineWidth: 3))
+                    .shadow(radius: 5)
             }
 
             Text(user.username)
                 .font(.headline)
                 .foregroundColor(.white)
+                .lineLimit(1)
+                .padding(.horizontal, 10)
         }
         .padding()
-        .background(Color.white.opacity(0.1))
-        .cornerRadius(10)
-        .shadow(radius: 5)
+        .background(
+            RoundedRectangle(cornerRadius: 15)
+                .fill(Color.white.opacity(0.2))
+                .shadow(radius: 5)
+        )
+    }
+}
+
+
+struct CustomBackButton: View {
+    @Environment(\.presentationMode) var presentationMode
+
+    var body: some View {
+        Button(action: {
+            presentationMode.wrappedValue.dismiss()
+        }) {
+            HStack(spacing: 5) {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(.blue)
+                Text("Back")
+                    .font(.system(size: 16))
+                    .foregroundColor(.blue)
+            }
+        }
     }
 }

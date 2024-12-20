@@ -13,6 +13,7 @@ struct ChatView: View {
             InputBarView(messageInput: $messageInput, onSend: sendMessage)
         }
         .background(Color(.systemGroupedBackground))
+        .navigationBarHidden(true) // Hide the navigation bar in ChatView
         .onAppear {
             if viewModel.messages.isEmpty {
                 viewModel.fetchMessages(with: receiverId)
@@ -34,7 +35,7 @@ struct ChatHeaderView: View {
     var body: some View {
         HStack {
             Button(action: {
-                presentationMode.wrappedValue.dismiss() // Dismiss the current view
+                presentationMode.wrappedValue.dismiss() // Dismiss only the current view
             }) {
                 Image(systemName: "chevron.left")
                     .font(.title2)

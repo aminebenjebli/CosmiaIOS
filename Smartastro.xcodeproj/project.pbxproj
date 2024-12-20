@@ -108,6 +108,7 @@
 			mainGroup = 272E35872CE3862800933BAB;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				27B0C19D2D15A0E100F80B4E /* XCRemoteSwiftPackageReference "socket.io-client-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 272E35912CE3862800933BAB /* Products */;
@@ -341,6 +342,17 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		27B0C19D2D15A0E100F80B4E /* XCRemoteSwiftPackageReference "socket.io-client-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/socketio/socket.io-client-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 16.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
 	};
 	rootObject = 272E35882CE3862800933BAB /* Project object */;
 }
