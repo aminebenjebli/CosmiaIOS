@@ -25,13 +25,11 @@ struct CardStack: View {
                     }) {
                         Label("Zodiac Compatibility", systemImage: "star.fill")
                     }
-
                     Button(action: {
                         viewModel.filterUsers(by: .ageMatch)
                     }) {
                         Label("Same Zodiac Sign", systemImage: "person.crop.circle.fill")
                     }
-
                     Button(action: {
                         viewModel.filterUsers(by: .ageMatch)
                     }) {
@@ -56,9 +54,13 @@ struct CardStack: View {
                         .multilineTextAlignment(.center)
                         .padding()
                 } else if viewModel.users.isEmpty {
+                    // Fetch users again when the stack is empty
                     Text("No users available")
                         .foregroundColor(.gray)
                         .multilineTextAlignment(.center)
+                        .onAppear {
+                            viewModel.fetchAllUsersWithAlbums()
+                        }
                 } else {
                     ForEach(viewModel.users.indices.reversed(), id: \.self) { index in
                         let user = viewModel.users[index]
@@ -84,7 +86,7 @@ struct CardStack: View {
             .padding(.horizontal)
         }
         .onAppear {
-            viewModel.fetchAllUsersWithAlbums() // Fetch users and their albums
+            viewModel.fetchAllUsersWithAlbums() // Initial fetch
         }
         .sheet(isPresented: $showMatchView) {
             MatchView(
@@ -98,6 +100,9 @@ struct CardStack: View {
     private func removeCard(at index: Int) {
         guard index >= 0 && index < viewModel.users.count else { return }
         viewModel.users.remove(at: index)
+        if viewModel.users.isEmpty {
+            viewModel.fetchAllUsersWithAlbums() // Reload when the stack is empty
+        }
     }
 
     private func handleLike(user: User, at index: Int) {

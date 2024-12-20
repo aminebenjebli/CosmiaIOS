@@ -189,6 +189,10 @@ class UserProfileViewModel: ObservableObject {
                 let fetchAlbums = filteredUsers.map { self.fetchAlbums(for: $0) }
                 return Publishers.MergeMany(fetchAlbums)
                     .collect()
+                    .map { usersWithAlbums in
+                        // Keep only users who have at least one album image
+                        usersWithAlbums.filter { $0.albumImages?.isEmpty == false }
+                    }
                     .eraseToAnyPublisher()
             }
             .receive(on: DispatchQueue.main)
@@ -202,6 +206,7 @@ class UserProfileViewModel: ObservableObject {
             })
             .store(in: &cancellables)
     }
+
 
         
         private func fetchAlbums(for user: User) -> AnyPublisher<User, Never> {
