@@ -9,6 +9,7 @@ struct User: Codable {
     var dateOfBirth: String
     var image: String?
     var albumImages: [String]?
+ // Array of matched user IDs
     //var likedUser: String
     // Computed property, not part of Codable
     var zodiacSign: String {
@@ -23,6 +24,8 @@ struct User: Codable {
         case password
         case dateOfBirth
         case image
+      
+
     }
 }
 

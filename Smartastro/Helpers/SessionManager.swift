@@ -11,7 +11,7 @@ class SessionManager {
         self.context = PersistenceController.shared.container.viewContext
     }
 
-    func saveSession(userId: String, accessToken: String, username: String, password: String, email: String, dateOfBirth: Date?) {
+    func saveSession(userId: String, accessToken: String, username: String, password: String, email: String, dateOfBirth: Date?, matches: [String]) {
         let newSession = Session(context: context)
         newSession.id = UUID()
         newSession.userId = userId
@@ -31,6 +31,18 @@ class SessionManager {
             print("[SessionManager] No valid dateOfBirth found; defaulting to current date.")
             newSession.dateOfBirth = Date()
         }
+        
+        if let decodedMatches = decodeMatchesFromToken(token: accessToken) {
+                if let matchesData = try? JSONEncoder().encode(decodedMatches),
+                   let matchesString = String(data: matchesData, encoding: .utf8) {
+                    newSession.matches = matchesString // Save matches as a JSON string
+                } else {
+                    newSession.matches = "[]" // Fallback to an empty array string
+                }
+            } else {
+                newSession.matches = "[]" // Fallback to an empty array string
+            }
+        
 
         newSession.createdAt = Date()
 
@@ -170,5 +182,29 @@ class SessionManager {
                 print("[SessionManager] Failed to update session: \(error.localizedDescription)")
             }
         }
+    
+    func decodeMatchesFromToken(token: String) -> [String]? {
+        let segments = token.split(separator: ".")
+        guard segments.count == 3 else {
+            print("[SessionManager] Invalid token format.")
+            return nil
+        }
+
+        let payloadSegment = segments[1]
+        let requiredLength = 4 * ((payloadSegment.count + 3) / 4)
+        let base64Padded = payloadSegment.padding(toLength: requiredLength, withPad: "=", startingAt: 0)
+            .replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")
+
+        guard let data = Data(base64Encoded: base64Padded),
+              let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+              let matches = json["matches"] as? [String] else {
+            print("[SessionManager] Failed to decode matches from token.")
+            return nil
+        }
+
+        return matches
+    }
+
     
 }

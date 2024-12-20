@@ -115,11 +115,13 @@ class LoginViewModel: ObservableObject {
 
                         print("Login successful. Access token received.")
 
-                        // Decode token to extract dateOfBirth
+                        // Decode token to extract additional fields
                         var decodedDateOfBirth: Date = Date() // Default to current date
+                        var matches: [String] = [] // Default empty matches
                         if let tokenData = self.decodeJWT(token: token) {
                             print("Decoded Token Payload: \(tokenData)")
                             
+                            // Extract dateOfBirth
                             if let dobString = tokenData["dateOfBirth"] as? String {
                                 let dateFormatter = ISO8601DateFormatter()
                                 dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -132,16 +134,25 @@ class LoginViewModel: ObservableObject {
                             } else {
                                 print("dateOfBirth not found in token payload.")
                             }
+                            
+                            // Extract matches
+                            if let matchesArray = tokenData["matches"] as? [String] {
+                                matches = matchesArray
+                                print("Decoded matches from token: \(matches)")
+                            } else {
+                                print("matches not found in token payload.")
+                            }
                         }
 
-                        // Save session with the decoded or fallback dateOfBirth
+                        // Save session with the decoded fields
                         SessionManager.shared.saveSession(
                             userId: userId,
                             accessToken: token,
                             username: username,
                             password: self.password,
                             email: email,
-                            dateOfBirth: decodedDateOfBirth
+                            dateOfBirth: decodedDateOfBirth,
+                            matches: matches
                         )
                         print("SessionManager saved session for User ID: \(userId)")
 
@@ -168,6 +179,7 @@ class LoginViewModel: ObservableObject {
             }
         }.resume()
     }
+
 
     func decodeJWT(token: String) -> [String: Any]? {
         let segments = token.split(separator: ".")

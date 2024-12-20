@@ -58,7 +58,7 @@ class SignUpViewModel: ObservableObject {
         let dateFormatter = ISO8601DateFormatter()
                 let birthDateString = dateFormatter.string(from: birthDate)
 
-                let newUser = User(username: userName, email: emailId, password: password, dateOfBirth: birthDateString)
+        let newUser = User(username: userName, email: emailId, password: password, dateOfBirth: birthDateString)
                 guard let url = URL(string: "http://localhost:3000/user/signup") else { return }
 
         var request = URLRequest(url: url)

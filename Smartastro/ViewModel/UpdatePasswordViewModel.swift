@@ -135,18 +135,20 @@ class UpdatePasswordViewModel: ObservableObject {
                 self?.successMessage = "Password updated successfully."
                 print("[UpdatePasswordViewModel] Password updated successfully.")
 
-                // Update the session with the new plain password
+                // Update the session with the new plain password and matches
                 if let session = self?.sessionManager.getActiveSession(),
                    let newPassword = self?.newPassword {
+                    let matches = SessionManager.shared.decodeMatchesFromToken(token: session.accessToken ?? "") ?? []
                     self?.sessionManager.saveSession(
                         userId: session.userId ?? "",
                         accessToken: session.accessToken ?? "",
                         username: session.username ?? "",
                         password: newPassword, // Save the plain password
                         email: session.email ?? "",
-                        dateOfBirth: session.dateOfBirth ?? Date()
+                        dateOfBirth: session.dateOfBirth ?? Date(),
+                        matches: matches // Include matches
                     )
-                    print("[UpdatePasswordViewModel] Session updated with new password.")
+                    print("[UpdatePasswordViewModel] Session updated with new password and matches.")
                 } else {
                     self?.handleError("Failed to update session. Missing data.")
                 }
@@ -156,6 +158,7 @@ class UpdatePasswordViewModel: ObservableObject {
             })
             .store(in: &cancellables)
     }
+
 
     private func clearPasswordFields() {
         DispatchQueue.main.async {

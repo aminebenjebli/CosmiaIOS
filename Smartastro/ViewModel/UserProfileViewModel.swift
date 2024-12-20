@@ -144,6 +144,7 @@ class UserProfileViewModel: ObservableObject {
                     self?.handleError("Failed to update user profile.")
                     return
                 }
+                let matches = self?.sessionManager.decodeMatchesFromToken(token: self?.sessionManager.getActiveSession()?.accessToken ?? "") ?? []
 
                 self?.sessionManager.saveSession(
                     userId: self?.userId ?? "",
@@ -151,7 +152,8 @@ class UserProfileViewModel: ObservableObject {
                     username: self?.username ?? "",
                     password: self?.password ?? "",
                     email: self?.email ?? "",
-                    dateOfBirth: self?.dateOfBirth ?? Date()
+                    dateOfBirth: self?.dateOfBirth ?? Date(),
+                    matches : matches
                 )
 
                 self?.successMessage = "Profile updated successfully."
@@ -381,6 +383,47 @@ class UserProfileViewModel: ObservableObject {
     private func getCompatibleSigns(for sign: String) -> [String] {
             ZodiacCompatibility.compatibility[sign] ?? []
         }
+    
+
+    func fetchMatches() {
+        // Ensure there's an active session and an access token
+        guard let currentSession = SessionManager.shared.getActiveSession(),
+              let accessToken = currentSession.accessToken,
+              let matchesFromToken = SessionManager.shared.decodeMatchesFromToken(token: accessToken) else {
+            errorMessage = "No active session or matches found"
+            return
+        }
+
+        isLoading = true
+
+        // Fetch each matched user's details using `fetchMatchedUser`
+        let matchedUsersDispatchGroup = DispatchGroup()
+        var matchedUsers: [User] = []
+
+        for matchedUserId in matchesFromToken {
+            matchedUsersDispatchGroup.enter()
+            fetchMatchedUser(likedUserId: matchedUserId) { result in
+                switch result {
+                case .success(let matchedUser):
+                    if let user = matchedUser {
+                        matchedUsers.append(user)
+                    }
+                case .failure(let error):
+                    print("Failed to fetch matched user: \(error.localizedDescription)")
+                }
+                matchedUsersDispatchGroup.leave()
+            }
+        }
+
+        // Wait for all matched user fetches to complete
+        matchedUsersDispatchGroup.notify(queue: .main) {
+            self.isLoading = false
+            self.users = matchedUsers
+            print("Fetched all matched users: \(matchedUsers.map { $0.username })")
+        }
+    }
+
+
 
 
 }

@@ -65,7 +65,7 @@ class UpdateViewModel: ObservableObject {
 
         print("[UpdateViewModel] Updating profile for userId: \(userId)")
 
-        // Update Local Session First
+        // Fetch the active session
         guard let session = sessionManager.getActiveSession() else {
             handleError("Failed to update session. No active session found.")
             isUpdating = false
@@ -73,6 +73,10 @@ class UpdateViewModel: ObservableObject {
             return
         }
 
+        // Decode matches from the token
+        let matches = sessionManager.decodeMatchesFromToken(token: session.accessToken ?? "") ?? []
+
+        // Update Local Session
         session.username = username
         session.email = email
         session.dateOfBirth = dateOfBirth
@@ -82,7 +86,8 @@ class UpdateViewModel: ObservableObject {
             username: username,
             password: session.password ?? "",
             email: email,
-            dateOfBirth: dateOfBirth
+            dateOfBirth: dateOfBirth,
+            matches: matches // Include matches in the updated session
         )
         print("[UpdateViewModel] Session updated successfully.")
 
@@ -144,7 +149,7 @@ class UpdateViewModel: ObservableObject {
                 print("[UpdateViewModel] Profile updated successfully.")
 
                 // Update session after successful backend update
-                self.updateSession()
+                self.updateSession(matches: matches)
 
                 completion(true)
             })
@@ -152,7 +157,7 @@ class UpdateViewModel: ObservableObject {
     }
 
     // MARK: - Update Local Session
-    private func updateSession() {
+    private func updateSession(matches: [String]) {
         guard let session = sessionManager.getActiveSession() else {
             print("[UpdateViewModel] No active session found. Unable to update session.")
             return
@@ -164,7 +169,8 @@ class UpdateViewModel: ObservableObject {
             username: username,
             password: session.password ?? "",
             email: email,
-            dateOfBirth: dateOfBirth
+            dateOfBirth: dateOfBirth,
+            matches: matches // Ensure matches are saved during session update
         )
 
         print("[UpdateViewModel] Session successfully updated after backend confirmation.")

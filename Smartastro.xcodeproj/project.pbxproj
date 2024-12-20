@@ -108,8 +108,6 @@
 			mainGroup = 272E35872CE3862800933BAB;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				272E35CC2CE38BBC00933BAB /* XCRemoteSwiftPackageReference "realm-swift" */,
-				27A4AA5C2D14C5ED00E37964 /* XCRemoteSwiftPackageReference "socket" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 272E35912CE3862800933BAB /* Products */;
@@ -343,25 +341,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		272E35CC2CE38BBC00933BAB /* XCRemoteSwiftPackageReference "realm-swift" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/realm/realm-swift";
-			requirement = {
-				branch = master;
-				kind = branch;
-			};
-		};
-		27A4AA5C2D14C5ED00E37964 /* XCRemoteSwiftPackageReference "socket" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/socketio/socket.io-client-swift";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
 	};
 	rootObject = 272E35882CE3862800933BAB /* Project object */;
 }

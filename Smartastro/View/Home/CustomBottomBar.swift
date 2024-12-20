@@ -64,9 +64,13 @@ struct CustomBottomBar: View {
                     Button(action: {
                         // Heart button action
                     }) {
+                        NavigationLink(destination: MatchedView(userId: "sampleUserId")) {
+                            
+                        
                         Image(systemName: "heart.fill")
                             .font(.title)
                             .foregroundColor(.white)
+                        }
                     }
 
                     // Profile Button
