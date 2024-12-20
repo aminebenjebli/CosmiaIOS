@@ -23,24 +23,25 @@ struct AlbumView: View {
 
             VStack {
                 HStack {
-                                   Spacer() // Push the icon to the right edge
-                                   Button(action: {
-                                       viewModel.saveAlbum()
-                                       DispatchQueue.main.async {
-                                           showSuccesMessage = true
-                                       }
-                                       DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                                           showSuccesMessage = false
-                                       }
-                                   }) {
-                                       Image(systemName: "tray.and.arrow.down.fill")
-                                           .resizable()
-                                           .frame(width: 30, height: 30)
-                                           .foregroundColor(.purple)
-                                           .padding()
-                                   }
-                               }
-                               .padding(.top, -30) // Adjust spacing at the top
+                    Spacer() // Push the icon to the right edge
+                    Button(action: {
+                        viewModel.saveAlbum()
+                        DispatchQueue.main.async {
+                            showSuccesMessage = true
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                            showSuccesMessage = false
+                        }
+                    }) {
+                        Image(systemName: "tray.and.arrow.down.fill")
+                            .resizable()
+                            .frame(width: 30, height: 30)
+                            .foregroundColor(.purple)
+                            .padding()
+                    }
+                }
+                .padding(.top, -30) // Adjust spacing at the top
+                
                 // Display selected images
                 ScrollView {
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 20) {
@@ -69,14 +70,13 @@ struct AlbumView: View {
                                 .offset(x: 10, y: -10) // Adjust offset for better placement
                             }
                         }
-
                     }
                     .padding()
                 }
 
                 // Add Image Button at the bottom
                 Button("Add Image") {
-                    showAddImageSheet.toggle()
+                    showImagePicker.toggle()
                 }
                 .padding()
                 .frame(maxWidth: .infinity) // Make the button take the maximum available width
@@ -96,8 +96,8 @@ struct AlbumView: View {
                         .animation(.easeIn, value: showSuccesMessage)
                 }
             }
-            .sheet(isPresented: $showAddImageSheet) {
-                ImagePickerView(viewModel: viewModel, isPresented: $showAddImageSheet)
+            .sheet(isPresented: $showImagePicker) {
+                ImagePickerView(viewModel: viewModel, isPresented: $showImagePicker)
             }
             .padding()
         }

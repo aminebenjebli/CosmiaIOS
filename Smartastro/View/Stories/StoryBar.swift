@@ -3,7 +3,8 @@ import PhotosUI
 
 struct StoryBar: View {
     @StateObject private var storyViewModel = StoryViewModel()
-    @State private var selectedPhoto: PhotosPickerItem? = nil
+    @State private var showImagePicker = false
+    @State private var selectedPhoto: UIImage? = nil
     @State private var selectedStories: [Story] = []
 
     var body: some View {
@@ -18,11 +19,13 @@ struct StoryBar: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 15) {
                         // Add Story Button
-                        PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                        Button(action: {
+                            showImagePicker.toggle()
+                        }) {
                             StoryCirclePlaceholder()
                         }
-                        .onChange(of: selectedPhoto) { newItem in
-                            loadSelectedPhoto(item: newItem)
+                        .sheet(isPresented: $showImagePicker) {
+                            ImagePickerViewForStories(viewModel: storyViewModel, isPresented: $showImagePicker)
                         }
 
                         // Display grouped stories (one circle per user)
@@ -34,8 +37,6 @@ struct StoryBar: View {
                                     }
                             }
                         }
-
-
                     }
                     .padding()
                 }
@@ -48,16 +49,6 @@ struct StoryBar: View {
             set: { _ in selectedStories = [] }
         )) {
             StoryView(images: selectedStories.map { $0.imageUrl })
-        }
-    }
-
-    private func loadSelectedPhoto(item: PhotosPickerItem?) {
-        guard let item = item else { return }
-        Task {
-            if let data = try? await item.loadTransferable(type: Data.self),
-               let uiImage = UIImage(data: data) {
-                storyViewModel.uploadStory(image: uiImage)
-            }
         }
     }
 }
@@ -80,4 +71,3 @@ struct StoryCirclePlaceholder: View {
         }
     }
 }
-

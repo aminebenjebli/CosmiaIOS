@@ -23,9 +23,10 @@ class UserProfileViewModel: ObservableObject {
 
     private let dateFormatter: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime]
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter
     }()
+
 
     var isEmailValid: Bool {
         email.contains("@") && email.contains(".")
@@ -246,6 +247,7 @@ class UserProfileViewModel: ObservableObject {
 
         return "Taurus"
     }
+    
     func likeUser(userId: String, likedUserId: String, completion: @escaping (Result<User?, Error>) -> Void) {
         print("[UserProfileViewModel] User \(userId) likes \(likedUserId)")
         guard let url = URL(string: "http://localhost:3000/user/like") else {
@@ -320,5 +322,52 @@ class UserProfileViewModel: ObservableObject {
             }
         }.resume()
     }
+    
+    func filterUsers(by criteria: FilterCriteria) {
+        // Get the current user's date of birth as a string
+        let currentUserDateOfBirthString = dateFormatter.string(from: dateOfBirth)
+
+        switch criteria {
+        case .zodiacSameSign:
+            // Get the current user's zodiac sign
+            let currentUserZodiac = ZodiacHelper.determineZodiacSign(from: currentUserDateOfBirthString)
+            print("Filtering by same zodiac sign: \(currentUserZodiac)")
+
+            // Filter users with the same zodiac sign
+            users = users.filter { user in
+                let userZodiac = ZodiacHelper.determineZodiacSign(from: user.dateOfBirth)
+                return userZodiac == currentUserZodiac
+            }
+
+        case .zodiacCompatibility:
+            // Get the current user's zodiac sign
+            let currentUserZodiac = ZodiacHelper.determineZodiacSign(from: currentUserDateOfBirthString)
+            let compatibleSigns = getCompatibleSigns(for: currentUserZodiac)
+            print("Filtering by compatible zodiac signs for: \(currentUserZodiac). Compatible: \(compatibleSigns)")
+
+            // Filter users with compatible zodiac signs
+            users = users.filter { user in
+                let userZodiac = ZodiacHelper.determineZodiacSign(from: user.dateOfBirth)
+                return compatibleSigns.contains(userZodiac)
+            }
+
+        case .ageMatch:
+            // Fetch users with the same date of birth
+            users = users.filter { user in
+                user.dateOfBirth == currentUserDateOfBirthString
+            }
+
+        case .allUsers:
+            // Reset the filter and fetch all users
+            fetchAllUsersWithAlbums()
+        }
+    }
+
+
+
+    private func getCompatibleSigns(for sign: String) -> [String] {
+            ZodiacCompatibility.compatibility[sign] ?? []
+        }
+
 
 }

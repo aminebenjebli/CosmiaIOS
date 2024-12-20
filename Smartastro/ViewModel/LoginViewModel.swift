@@ -112,30 +112,46 @@ class LoginViewModel: ObservableObject {
                        let userId = user["id"] as? String,
                        let username = user["username"] as? String,
                        let email = user["email"] as? String {
+
                         print("Login successful. Access token received.")
 
-                        // Optional: Handle missing `dateOfBirth` gracefully
-                        let dobString = user["dateOfBirth"] as? String
-                        let dateOfBirth = dobString.flatMap { ISO8601DateFormatter().date(from: $0) } ?? Date()
+                        // Decode token to extract dateOfBirth
+                        var decodedDateOfBirth: Date = Date() // Default to current date
+                        if let tokenData = self.decodeJWT(token: token) {
+                            print("Decoded Token Payload: \(tokenData)")
+                            
+                            if let dobString = tokenData["dateOfBirth"] as? String {
+                                let dateFormatter = ISO8601DateFormatter()
+                                dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+                                if let dob = dateFormatter.date(from: dobString) {
+                                    decodedDateOfBirth = dob
+                                    print("Decoded dateOfBirth from token: \(dob)")
+                                } else {
+                                    print("Failed to parse dateOfBirth string: \(dobString)")
+                                }
+                            } else {
+                                print("dateOfBirth not found in token payload.")
+                            }
+                        }
 
-                        // Update UserSession
-                        UserSession.shared.userId = userId
-                        UserSession.shared.accessToken = token
-                        UserSession.shared.username = username
-                        UserSession.shared.password = self.password
-                        print("UserSession Updated: User ID: \(userId), Username: \(username), Access Token: \(token)")
-
-                        // Save session to persistent storage
+                        // Save session with the decoded or fallback dateOfBirth
                         SessionManager.shared.saveSession(
                             userId: userId,
                             accessToken: token,
                             username: username,
                             password: self.password,
                             email: email,
-                            dateOfBirth: dateOfBirth
+                            dateOfBirth: decodedDateOfBirth
                         )
                         print("SessionManager saved session for User ID: \(userId)")
 
+                        // Update UserSession
+                        UserSession.shared.userId = userId
+                        UserSession.shared.accessToken = token
+                        UserSession.shared.username = username
+                        UserSession.shared.password = self.password
+
+                        print("UserSession Updated: User ID: \(userId), Username: \(username), Access Token: \(token)")
                         completion(.success)
                     } else {
                         print("Unexpected server response. Login failed.")
@@ -153,10 +169,12 @@ class LoginViewModel: ObservableObject {
         }.resume()
     }
 
-
     func decodeJWT(token: String) -> [String: Any]? {
         let segments = token.split(separator: ".")
-        guard segments.count == 3 else { return nil }
+        guard segments.count == 3 else {
+            print("JWT is malformed: Expected 3 segments but found \(segments.count).")
+            return nil
+        }
 
         let payloadSegment = segments[1]
         let requiredLength = 4 * ((payloadSegment.count + 3) / 4)
@@ -164,9 +182,12 @@ class LoginViewModel: ObservableObject {
             .replacingOccurrences(of: "-", with: "+")
             .replacingOccurrences(of: "_", with: "/")
 
-        guard let data = Data(base64Encoded: base64Padded) else { return nil }
-        return (try? JSONSerialization.jsonObject(with: data)) as? [String: Any]
+        guard let data = Data(base64Encoded: base64Padded),
+              let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else { return nil }
+
+        return json
     }
+
 
 
     func sendOtp() {

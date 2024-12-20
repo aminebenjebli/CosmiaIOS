@@ -7,25 +7,25 @@ struct HomeView: View {
         NavigationView {
             ZStack {
                 // Background Gradient
-                LinearGradient(gradient: Gradient(colors: [Color.purple.opacity(0.6), Color.black]),
+                LinearGradient(gradient: Gradient(colors: [Color.purple.opacity(0.8), Color.black]),
                                startPoint: .top,
                                endPoint: .bottom)
                     .edgesIgnoringSafeArea(.all)
                 
-                VStack(spacing: 20) {
+                VStack(spacing: 0) {
                     // Home Title
                     Text("Cosmia")
                         .font(.largeTitle)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.black)
+                        .fontWeight(.heavy)
+                        .foregroundColor(.white)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.leading, 40)
-                        .padding(.top, 0)
-                        
+                        .padding(.leading, 20)
+                        .padding(.top, 20)
                     
                     // Story Bar
                     StoryBar()
-                        .padding(.top, 0)// Spacing under the title
+                        .padding(.horizontal)
+                        .padding(.top, 10)
                     
                     Spacer()
                     
@@ -42,7 +42,7 @@ struct HomeView: View {
                     
                     // Custom Bottom Navigation Bar
                     CustomBottomBar()
-                        .padding(.bottom, 0)
+                        .padding(.bottom, 10)
                 }
                 .padding(.horizontal)
             }

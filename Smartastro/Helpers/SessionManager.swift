@@ -11,31 +11,92 @@ class SessionManager {
         self.context = PersistenceController.shared.container.viewContext
     }
 
-    func saveSession(userId: String, accessToken: String, username: String, password: String, email: String, dateOfBirth: Date) {
+    func saveSession(userId: String, accessToken: String, username: String, password: String, email: String, dateOfBirth: Date?) {
         let newSession = Session(context: context)
         newSession.id = UUID()
         newSession.userId = userId
         newSession.accessToken = accessToken
         newSession.username = username
-        newSession.password = password // Store the plain password
+        newSession.password = password
         newSession.email = email
-        newSession.dateOfBirth = dateOfBirth
-        newSession.createdAt = Date() // Current timestamp
+
+        // Decode dateOfBirth from token if not provided
+        if let dateOfBirth = dateOfBirth {
+            newSession.dateOfBirth = dateOfBirth
+        } else if let decodedDOB = decodeDateOfBirthFromToken(token: accessToken) {
+            newSession.dateOfBirth = decodedDOB
+        } else if let dateOfBirth = dateOfBirth {
+            newSession.dateOfBirth = dateOfBirth
+        } else {
+            print("[SessionManager] No valid dateOfBirth found; defaulting to current date.")
+            newSession.dateOfBirth = Date()
+        }
+
+        newSession.createdAt = Date()
 
         do {
             try context.save()
-            print("Session saved successfully!")
-            print("Saved session details:")
+            print("[SessionManager] Session saved successfully!")
             print("- User ID: \(userId)")
             print("- Username: \(username)")
             print("- Email: \(email)")
-            print("- Password: \(password)") // Added for debug purposes
+            print("- Password: \(password)")
             print("- Access Token: \(accessToken)")
-            print("- date of birth: \(dateOfBirth)")
+            print("- Date of Birth: \(newSession.dateOfBirth ?? Date())")
         } catch {
-            print("Failed to save session: \(error.localizedDescription)")
+            print("[SessionManager] Failed to save session: \(error.localizedDescription)")
         }
     }
+    private func decodeDateOfBirthFromToken(token: String) -> Date? {
+        let segments = token.split(separator: ".")
+        guard segments.count == 3 else { return nil }
+
+        let payloadSegment = segments[1]
+        let requiredLength = 4 * ((payloadSegment.count + 3) / 4)
+        let base64Padded = payloadSegment.padding(toLength: requiredLength, withPad: "=", startingAt: 0)
+            .replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")
+
+        guard let data = Data(base64Encoded: base64Padded),
+              let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
+              let dobString = json["dateOfBirth"] as? String else {
+            print("[SessionManager] Failed to decode dateOfBirth from token.")
+            return nil
+        }
+
+        let dateFormatter = ISO8601DateFormatter()
+        if let dob = dateFormatter.date(from: dobString) {
+            return dob
+        } else {
+            print("[SessionManager] Invalid dateOfBirth format in token: \(dobString)")
+            return nil
+        }
+    }
+    func debugTokenPayload(token: String) {
+        let segments = token.split(separator: ".")
+        guard segments.count == 3 else {
+            print("[SessionManager] Invalid token format.")
+            return
+        }
+
+        let payloadSegment = segments[1]
+        let requiredLength = 4 * ((payloadSegment.count + 3) / 4)
+        let base64Padded = payloadSegment.padding(toLength: requiredLength, withPad: "=", startingAt: 0)
+            .replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")
+
+        guard let data = Data(base64Encoded: base64Padded),
+              let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {
+            print("[SessionManager] Failed to decode token payload.")
+            return
+        }
+
+        print("[SessionManager] Token Payload: \(json)")
+    }
+
+
+
+
     // MARK: - Retrieve Active Session
     func getActiveSession() -> Session? {
         let fetchRequest: NSFetchRequest<Session> = Session.fetchRequest()
@@ -97,7 +158,7 @@ class SessionManager {
             session.username = username
             session.email = email
             session.dateOfBirth = dateOfBirth
-            session.createdAt = Date() 
+            session.createdAt = Date()
 
             do {
                 try context.save()

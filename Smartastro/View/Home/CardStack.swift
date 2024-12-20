@@ -2,7 +2,6 @@ import SwiftUI
 
 struct CardStack: View {
     @StateObject private var viewModel: UserProfileViewModel
-    @State private var currentUserName: String = "" // Store the current user's name
     @State private var matchedUserName: String = "" // Store the matched user's name
     @State private var showMatchView = false // Flag to show the MatchView
 
@@ -11,44 +10,84 @@ struct CardStack: View {
     }
 
     var body: some View {
-        ZStack {
-            if viewModel.isLoading {
-                ProgressView("Loading users...")
-            } else if let errorMessage = viewModel.errorMessage {
-                Text(errorMessage)
-                    .foregroundColor(.red)
-                    .multilineTextAlignment(.center)
-                    .padding()
-            } else if viewModel.users.isEmpty {
-                Text("No users available")
-                    .foregroundColor(.gray)
-                    .multilineTextAlignment(.center)
-            } else {
-                ForEach(viewModel.users.indices.reversed(), id: \.self) { index in
-                    let user = viewModel.users[index]
+        VStack {
+            // Filter Menu Button
+            HStack {
+                Spacer()
+                Menu {
+                    Button(action: {
+                        viewModel.filterUsers(by: .allUsers)
+                    }) {
+                        Label("All Users", systemImage: "globe")
+                    }
+                    Button(action: {
+                        viewModel.filterUsers(by: .zodiacCompatibility)
+                    }) {
+                        Label("Zodiac Compatibility", systemImage: "star.fill")
+                    }
 
-                    SwipeableCard(
-                        content: "\(user.username)\n\(user.zodiacSign)",
-                        albumImages: user.albumImages, // Pass album images here
-                        onSwipedLeft: {
-                            print("Disliked: \(user.username)")
-                            removeCard(at: index)
-                        },
-                        onSwipedRight: {
-                            handleLike(user: user, at: index)
-                        }
-                    )
-                    .zIndex(Double(index)) // Ensure proper stacking
+                    Button(action: {
+                        viewModel.filterUsers(by: .ageMatch)
+                    }) {
+                        Label("Same Zodiac Sign", systemImage: "person.crop.circle.fill")
+                    }
+
+                    Button(action: {
+                        viewModel.filterUsers(by: .ageMatch)
+                    }) {
+                        Label("Same Age", systemImage: "calendar")
+                    }
+                } label: {
+                    Image(systemName: "line.horizontal.3.decrease.circle.fill")
+                        .font(.title2)
+                        .foregroundColor(.white)
+                }
+                .padding(.trailing, 20)
+            }
+
+            ZStack {
+                if viewModel.isLoading {
+                    ProgressView("Loading users...")
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .scaleEffect(1.5)
+                } else if let errorMessage = viewModel.errorMessage {
+                    Text(errorMessage)
+                        .foregroundColor(.red)
+                        .multilineTextAlignment(.center)
+                        .padding()
+                } else if viewModel.users.isEmpty {
+                    Text("No users available")
+                        .foregroundColor(.gray)
+                        .multilineTextAlignment(.center)
+                } else {
+                    ForEach(viewModel.users.indices.reversed(), id: \.self) { index in
+                        let user = viewModel.users[index]
+
+                        SwipeableCard(
+                            content: "\(user.username)\n\(user.zodiacSign)",
+                            albumImages: user.albumImages, // Pass album images here
+                            onSwipedLeft: {
+                                print("Disliked: \(user.username)")
+                                removeCard(at: index)
+                            },
+                            onSwipedRight: {
+                                handleLike(user: user, at: index)
+                            }
+                        )
+                        .zIndex(Double(index)) // Ensure proper stacking
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 30)
+                        .shadow(color: .black.opacity(0.2), radius: 10, x: 0, y: 10)
+                    }
                 }
             }
+            .padding(.horizontal)
         }
-        .padding()
         .onAppear {
             viewModel.fetchAllUsersWithAlbums() // Fetch users and their albums
         }
         .sheet(isPresented: $showMatchView) {
             MatchView(
-
                 matchedUserName: matchedUserName,
                 onSendMessage: { print("Send Message tapped") },
                 onKeepSwiping: { showMatchView = false }
