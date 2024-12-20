@@ -1,6 +1,6 @@
 import Foundation
 
-struct Message: Identifiable, Codable {
+struct Message: Identifiable, Codable, Equatable {
     let id: String // Corresponds to _id in MongoDB
     let senderId: String
     let receiverId: String
