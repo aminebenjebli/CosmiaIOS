@@ -168,33 +168,41 @@ class UserProfileViewModel: ObservableObject {
     
     
     func fetchAllUsersWithAlbums() {
-            guard let url = URL(string: "\(apiUrl)/user/get") else {
-                errorMessage = "Invalid URL for fetching users"
-                return
-            }
-            
-            isLoading = true
-            URLSession.shared.dataTaskPublisher(for: url)
-                .map(\.data)
-                .decode(type: [User].self, decoder: JSONDecoder())
-                .flatMap { users -> AnyPublisher<[User], Never> in
-                    // Fetch album images for each user
-                    let fetchAlbums = users.map { self.fetchAlbums(for: $0) }
-                    return Publishers.MergeMany(fetchAlbums)
-                        .collect()
-                        .eraseToAnyPublisher()
-                }
-                .receive(on: DispatchQueue.main)
-                .sink(receiveCompletion: { [weak self] completion in
-                    self?.isLoading = false
-                    if case .failure(let error) = completion {
-                        self?.errorMessage = "Failed to fetch users: \(error.localizedDescription)"
-                    }
-                }, receiveValue: { [weak self] usersWithAlbums in
-                    self?.users = usersWithAlbums
-                })
-                .store(in: &cancellables)
+        guard let currentUserId = SessionManager.shared.getActiveSession()?.userId else {
+            errorMessage = "No active user session"
+            return
         }
+        
+        guard let url = URL(string: "\(apiUrl)/user/get") else {
+            errorMessage = "Invalid URL for fetching users"
+            return
+        }
+        
+        isLoading = true
+        URLSession.shared.dataTaskPublisher(for: url)
+            .map(\.data)
+            .decode(type: [User].self, decoder: JSONDecoder())
+            .flatMap { users -> AnyPublisher<[User], Never> in
+                // Exclude the current user
+                let filteredUsers = users.filter { $0.id != currentUserId }
+                // Fetch album images for each filtered user
+                let fetchAlbums = filteredUsers.map { self.fetchAlbums(for: $0) }
+                return Publishers.MergeMany(fetchAlbums)
+                    .collect()
+                    .eraseToAnyPublisher()
+            }
+            .receive(on: DispatchQueue.main)
+            .sink(receiveCompletion: { [weak self] completion in
+                self?.isLoading = false
+                if case .failure(let error) = completion {
+                    self?.errorMessage = "Failed to fetch users: \(error.localizedDescription)"
+                }
+            }, receiveValue: { [weak self] usersWithAlbums in
+                self?.users = usersWithAlbums
+            })
+            .store(in: &cancellables)
+    }
+
         
         private func fetchAlbums(for user: User) -> AnyPublisher<User, Never> {
             guard let url = URL(string: "\(apiUrl)/album/\(user.email)") else {
