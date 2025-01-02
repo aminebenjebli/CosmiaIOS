@@ -13,17 +13,13 @@ struct Login: View {
     @State private var showSuccessAlert: Bool = false
     @State private var showPopup: Bool = false
 
-    @Environment(\.managedObjectContext) private var viewContext
-
     var body: some View {
         ZStack {
-            // Background gradient
             LinearGradient(gradient: Gradient(colors: [Color.purple.opacity(0.6), Color.black]),
                            startPoint: .top,
                            endPoint: .bottom)
                 .edgesIgnoringSafeArea(.all)
 
-            // Zodiac Animation Layer
             ZodiacAnimation()
                 .opacity(0.5)
                 .edgesIgnoringSafeArea(.all)
@@ -184,7 +180,6 @@ struct Login: View {
         }
     }
 }
-
 struct ZodiacAnimation: View {
     let zodiacSigns = ["♈︎", "♉︎", "♊︎", "♋︎", "♌︎", "♍︎", "♎︎", "♏︎", "♐︎", "♑︎", "♒︎", "♓︎"]
     @State private var rotation: Double = 0

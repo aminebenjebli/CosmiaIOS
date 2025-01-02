@@ -1,35 +1,176 @@
 import Foundation
+import Combine
 import UserNotifications
-import BackgroundTasks
 
 class FeedsViewModel: ObservableObject {
-    @Published var dailyFeed: ZodiacFeed? // Current horoscope
-    @Published var newDailyFeed: ZodiacFeed? // New horoscope after midnight
-    @Published var dailyImageURL: URL? // Image for the current horoscope
-    @Published var newDailyImageURL: URL? // Image for the new horoscope
-
-    private let openAIAPIKey = "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"
+    @Published var dailyFeed: FeedModel? // Use updated FeedModel
+    @Published var dailyImageURL: URL?
+    @Published var feedHistory: [FeedModel] = [] // Use updated FeedModel
+    @Published var countdownText: String = ""
+    private var timer: AnyCancellable?
+    
+    private let backendEndpoint = "http://localhost:3000/feedsgen"
 
     init() {
-        requestNotificationAuthorization()
-        registerBackgroundTask()
-        loadStoredFeeds()
-        scheduleDailyGenerationIfNeeded()
+        startCountdownTimer()
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, _ in
+            if granted {
+                print("[FeedsViewModel] Notifications granted.")
+            }
+        }
+    }
+    private func startCountdownTimer() {
+           timer = Timer.publish(every: 1, on: .main, in: .common)
+               .autoconnect()
+               .sink { [weak self] _ in
+                   self?.updateCountdown()
+               }
+       }
+
+       private func updateCountdown() {
+           let calendar = Calendar.current
+           let now = Date()
+           if let nextMidnight = calendar.nextDate(after: now, matching: DateComponents(hour: 0), matchingPolicy: .nextTime) {
+               let remainingTime = Int(nextMidnight.timeIntervalSince(now))
+               let hours = remainingTime / 3600
+               let minutes = (remainingTime % 3600) / 60
+               let seconds = remainingTime % 60
+               countdownText = String(format: "%02d:%02d:%02d", hours, minutes, seconds)
+           } else {
+               countdownText = "00:00:00"
+           }
+       }
+    func fetchDailyFeed() {
+        guard let session = SessionManager.shared.getActiveSession(),
+              let email = session.email,
+              let dateOfBirth = session.dateOfBirth else {
+            print("[FeedsViewModel] Error: No active session or missing user data.")
+            return
+        }
+
+        fetchLastFeedFromBackend(email: email) { [weak self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let feed):
+                    if !self!.isBeforeMidnight(feed.createdAt) {
+                        print("[FeedsViewModel] Found today's feed: \(feed)")
+                        self?.dailyFeed = feed
+                        self?.dailyImageURL = URL(string: feed.image)
+                    } else {
+                        print("[FeedsViewModel] Found expired feed. Regenerate feed.")
+                        self?.generateDailyFeed(for: feed.zodiacSign, email: email)
+                    }
+                case .failure(let error):
+                    print("[FeedsViewModel] Failed to fetch feed: \(error.localizedDescription)")
+                    self?.generateDailyFeed(for: self?.determineZodiacSign(from: dateOfBirth) ?? "", email: email)
+                }
+            }
+        }
     }
 
-    func fetchDailyFeed(isNew: Bool = false) {
-        guard let session = SessionManager.shared.getActiveSession(),
-              let dateOfBirth = session.dateOfBirth else { return }
+    func fetchFeedHistory(email: String) {
+        guard let url = URL(string: "\(backendEndpoint)/history/\(email)") else {
+            print("[FeedsViewModel] Invalid history URL.")
+            return
+        }
 
-        guard let zodiacSign = determineZodiacSign(from: dateOfBirth) else { return }
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                print("[FeedsViewModel] Network error: \(error.localizedDescription)")
+                return
+            }
 
+            guard let data = data else {
+                print("[FeedsViewModel] No data received for history.")
+                return
+            }
+
+            do {
+                let decoder = JSONDecoder()
+                decoder.dateDecodingStrategy = .formatted(DateFormatter.iso8601WithMilliseconds)
+                let feeds = try decoder.decode([FeedModel].self, from: data)
+                DispatchQueue.main.async {
+                    self.feedHistory = feeds
+                }
+            } catch let decodingError as DecodingError {
+                switch decodingError {
+                case .typeMismatch(let type, let context):
+                    print("[FeedsViewModel] Type mismatch for type \(type): \(context.debugDescription)")
+                case .valueNotFound(let type, let context):
+                    print("[FeedsViewModel] Value not found for type \(type): \(context.debugDescription)")
+                case .keyNotFound(let key, let context):
+                    print("[FeedsViewModel] Key '\(key)' not found: \(context.debugDescription)")
+                case .dataCorrupted(let context):
+                    print("[FeedsViewModel] Data corrupted: \(context.debugDescription)")
+                @unknown default:
+                    print("[FeedsViewModel] Unknown decoding error: \(decodingError)")
+                }
+            } catch {
+                print("[FeedsViewModel] Unknown error: \(error.localizedDescription)")
+            }
+        }.resume()
+    }
+    private func fetchLastFeedFromBackend(email: String, completion: @escaping (Result<FeedModel, Error>) -> Void) {
+        guard let url = URL(string: "\(backendEndpoint)/\(email)") else {
+            print("[FeedsViewModel] Invalid backend URL.")
+            completion(.failure(NSError(domain: "Invalid URL", code: -1, userInfo: nil)))
+            return
+        }
+
+        print("[FeedsViewModel] Sending request to \(url)")
+
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let error = error {
+                print("[FeedsViewModel] Network error: \(error.localizedDescription)")
+                completion(.failure(error))
+                return
+            }
+
+            guard let data = data else {
+                print("[FeedsViewModel] No data received from server.")
+                completion(.failure(NSError(domain: "No Data", code: -1, userInfo: nil)))
+                return
+            }
+
+            // Log raw JSON response
+            if let rawResponse = String(data: data, encoding: .utf8) {
+                print("[FeedsViewModel] Raw response: \(rawResponse)")
+            }
+
+            do {
+                let decoder = JSONDecoder()
+                decoder.dateDecodingStrategy = .formatted(DateFormatter.iso8601WithMilliseconds)
+                let feed = try decoder.decode(FeedModel.self, from: data)
+                completion(.success(feed))
+            } catch let decodingError as DecodingError {
+                switch decodingError {
+                case .typeMismatch(let type, let context):
+                    print("[FeedsViewModel] Type mismatch for type \(type): \(context.debugDescription)")
+                case .valueNotFound(let type, let context):
+                    print("[FeedsViewModel] Value not found for type \(type): \(context.debugDescription)")
+                case .keyNotFound(let key, let context):
+                    print("[FeedsViewModel] Key '\(key)' not found: \(context.debugDescription)")
+                case .dataCorrupted(let context):
+                    print("[FeedsViewModel] Data corrupted: \(context.debugDescription)")
+                @unknown default:
+                    print("[FeedsViewModel] Unknown decoding error: \(decodingError)")
+                }
+                completion(.failure(decodingError))
+            } catch {
+                print("[FeedsViewModel] Unknown error: \(error.localizedDescription)")
+                completion(.failure(error))
+            }
+        }.resume()
+    }
+    
+    private func generateDailyFeed(for zodiacSign: String, email: String) {
         let prompt = """
         Generate a daily horoscope for the zodiac sign \(zodiacSign). Include:
         - A positive or realistic prediction.
         - A lucky number.
         - A lucky color.
         Format your response as:
-        Zodiac Sign: {zodiacSign}
+        Zodiac Sign: \(zodiacSign)
         Message: {message}
         Lucky Number: {number}
         Lucky Color: {color}
@@ -37,33 +178,102 @@ class FeedsViewModel: ObservableObject {
 
         let request = makeOpenAIRequest(prompt: prompt)
 
-        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
-            if let error = error { return }
-
-            guard let data = data else { return }
-
-            do {
-                let result = try JSONDecoder().decode(OpenAIResponse.self, from: data)
-                if let content = result.choices.first?.message.content {
-                    DispatchQueue.main.async {
-                        let parsedFeed = self?.parseResponse(content, for: zodiacSign)
-                        if isNew {
-                            self?.newDailyFeed = parsedFeed
-                            if let feed = parsedFeed {
-                                self?.fetchImage(for: feed.zodiacSign, message: feed.message, isNew: true)
-                                self?.saveFeedToStorage(feed: feed, isNew: true)
-                                self?.scheduleNotification()
-                            }
-                        } else {
-                            self?.dailyFeed = parsedFeed
-                            if let feed = parsedFeed {
-                                self?.fetchImage(for: feed.zodiacSign, message: feed.message, isNew: false)
-                                self?.saveFeedToStorage(feed: feed, isNew: false)
+        URLSession.shared.dataTask(with: request) { [weak self] data, _, error in
+            guard let self = self else { return }
+            if let data = data, let result = try? JSONDecoder().decode(OpenAIResponse.self, from: data),
+               let content = result.choices.first?.message.content {
+                let parsedFeed = self.parseResponse(content, for: zodiacSign)
+                if let feed = parsedFeed {
+                    self.generateImage(for: feed.zodiacSign, message: feed.description) { imageResult in
+                        DispatchQueue.main.async {
+                            switch imageResult {
+                            case .success(let imageUrl):
+                                // Create a new instance of FeedModel with the image URL
+                                let now = Date()
+                                let completeFeed = FeedModel(
+                                    id: UUID().uuidString, // Generate a new UUID for the feed
+                                    email: email,
+                                    zodiacSign: feed.zodiacSign,
+                                    luckyNumber: feed.luckyNumber,
+                                    luckyColor: feed.luckyColor,
+                                    description: feed.description,
+                                    image: imageUrl,
+                                    createdAt: now, // Use the current date
+                                    updatedAt: now // Default to the same as createdAt
+                                )
+                                self.dailyFeed = completeFeed
+                                self.dailyImageURL = URL(string: imageUrl)
+                                self.uploadFeedToBackend(feed: completeFeed, email: email)
+                            case .failure(let error):
+                                print("[FeedsViewModel] Failed to generate image: \(error.localizedDescription)")
                             }
                         }
                     }
                 }
-            } catch {}
+            } else {
+                print("[FeedsViewModel] Failed to decode OpenAI response or received invalid data.")
+            }
+        }.resume()
+    }
+    private func uploadFeedToBackend(feed: FeedModel, email: String) {
+        guard let url = URL(string: "\(backendEndpoint)/create"),
+              let imageURL = URL(string: feed.image) else {
+            print("[FeedsViewModel] Invalid upload URL or image URL.")
+            return
+        }
+
+        // Fetch the image data from the URL
+        URLSession.shared.dataTask(with: imageURL) { data, _, error in
+            guard let imageData = data else {
+                print("[FeedsViewModel] Failed to fetch image data: \(error?.localizedDescription ?? "Unknown error")")
+                return
+            }
+
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            
+            let boundary = UUID().uuidString
+            request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+
+            var body = Data()
+            let addField: (String, String) -> Void = { name, value in
+                body.append("--\(boundary)\r\n".data(using: .utf8)!)
+                body.append("Content-Disposition: form-data; name=\"\(name)\"\r\n\r\n".data(using: .utf8)!)
+                body.append("\(value)\r\n".data(using: .utf8)!)
+            }
+
+            addField("email", email)
+            addField("zodiacSign", feed.zodiacSign)
+            addField("luckyNumber", "\(feed.luckyNumber)")
+            addField("luckyColor", feed.luckyColor)
+            addField("description", feed.description)
+
+            body.append("--\(boundary)\r\n".data(using: .utf8)!)
+            body.append("Content-Disposition: form-data; name=\"image\"; filename=\"image.png\"\r\n".data(using: .utf8)!)
+            body.append("Content-Type: image/png\r\n\r\n".data(using: .utf8)!)
+            body.append(imageData)
+            body.append("\r\n".data(using: .utf8)!)
+            body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+
+            request.httpBody = body
+
+            URLSession.shared.dataTask(with: request) { _, response, error in
+                if let error = error {
+                    print("[FeedsViewModel] Upload error: \(error.localizedDescription)")
+                    return
+                }
+
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    print("[FeedsViewModel] Invalid response from server.")
+                    return
+                }
+
+                if httpResponse.statusCode == 200 || httpResponse.statusCode == 201 {
+                    print("[FeedsViewModel] Feed uploaded successfully.")
+                } else {
+                    print("[FeedsViewModel] Failed to upload feed. Status code: \(httpResponse.statusCode)")
+                }
+            }.resume()
         }.resume()
     }
 
@@ -71,7 +281,7 @@ class FeedsViewModel: ObservableObject {
         let url = URL(string: "https://api.openai.com/v1/chat/completions")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.addValue("Bearer \(openAIAPIKey)", forHTTPHeaderField: "Authorization")
+        request.addValue("Bearer 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", forHTTPHeaderField: "Authorization")
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
 
         let body: [String: Any] = [
@@ -83,16 +293,17 @@ class FeedsViewModel: ObservableObject {
             "max_tokens": 200,
             "temperature": 0.7
         ]
+
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
         return request
     }
 
-    private func fetchImage(for zodiacSign: String, message: String, isNew: Bool) {
+    private func generateImage(for zodiacSign: String, message: String, completion: @escaping (Result<String, Error>) -> Void) {
         let prompt = "An artistic representation of \(zodiacSign), \(message)."
         let url = URL(string: "https://api.openai.com/v1/images/generations")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.addValue("Bearer \(openAIAPIKey)", forHTTPHeaderField: "Authorization")
+        request.addValue("Bearer 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", forHTTPHeaderField: "Authorization")
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
 
         let body: [String: Any] = [
@@ -102,32 +313,20 @@ class FeedsViewModel: ObservableObject {
         ]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
 
-        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
-            if let error = error { return }
-
-            guard let data = data else { return }
-
-            do {
-                let result = try JSONDecoder().decode(OpenAIImageResponse.self, from: data)
-                if let imageUrlString = result.data.first?.url,
-                   let imageUrl = URL(string: imageUrlString) {
-                    DispatchQueue.main.async {
-                        if isNew {
-                            self?.newDailyImageURL = imageUrl
-                        } else {
-                            self?.dailyImageURL = imageUrl
-                        }
-                    }
-                }
-            } catch {}
+        URLSession.shared.dataTask(with: request) { data, _, error in
+            if let data = data, let result = try? JSONDecoder().decode(OpenAIImageResponse.self, from: data),
+               let imageUrl = result.data.first?.url {
+                completion(.success(imageUrl))
+            } else {
+                completion(.failure(error ?? NSError(domain: "Image Generation Error", code: -1, userInfo: nil)))
+            }
         }.resume()
     }
 
-    private func parseResponse(_ response: String, for zodiacSign: String) -> ZodiacFeed {
+    private func parseResponse(_ response: String, for zodiacSign: String) -> FeedModel? {
         let components = response.split(separator: "\n").map { $0.split(separator: ":").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) } }
-
         var message = ""
-        var luckyNumber = ""
+        var luckyNumber = 0
         var luckyColor = ""
 
         for component in components {
@@ -136,7 +335,7 @@ class FeedsViewModel: ObservableObject {
                 case "Message":
                     message = component[1]
                 case "Lucky Number":
-                    luckyNumber = component[1]
+                    luckyNumber = Int(component[1]) ?? 0
                 case "Lucky Color":
                     luckyColor = component[1]
                 default:
@@ -144,7 +343,25 @@ class FeedsViewModel: ObservableObject {
                 }
             }
         }
-        return ZodiacFeed(zodiacSign: zodiacSign, message: message, luckyNumber: luckyNumber, luckyColor: luckyColor)
+
+        guard !message.isEmpty, luckyNumber != 0, !luckyColor.isEmpty else { return nil }
+
+        let now = Date()
+        return FeedModel(
+            id: UUID().uuidString, // Temporary ID
+            email: "", // Will be populated elsewhere
+            zodiacSign: zodiacSign,
+            luckyNumber: luckyNumber,
+            luckyColor: luckyColor,
+            description: message,
+            image: "", // Will be updated with the generated image URL
+            createdAt: now,
+            updatedAt: now // Default to the same as createdAt
+        )
+    }
+    private func isBeforeMidnight(_ date: Date) -> Bool {
+        let calendar = Calendar.current
+        return calendar.startOfDay(for: date) < calendar.startOfDay(for: Date())
     }
 
     private func determineZodiacSign(from date: Date) -> String? {
@@ -182,91 +399,6 @@ class FeedsViewModel: ObservableObject {
         return nil
     }
 
-    private func loadStoredFeeds() {
-        if let data = UserDefaults.standard.data(forKey: "dailyFeed"),
-           let storedFeed = try? JSONDecoder().decode(ZodiacFeed.self, from: data) {
-            dailyFeed = storedFeed
-        }
-        if let data = UserDefaults.standard.data(forKey: "newDailyFeed"),
-           let storedNewFeed = try? JSONDecoder().decode(ZodiacFeed.self, from: data) {
-            newDailyFeed = storedNewFeed
-        }
-    }
-
-    private func saveFeedToStorage(feed: ZodiacFeed, isNew: Bool) {
-        let key = isNew ? "newDailyFeed" : "dailyFeed"
-        if let data = try? JSONEncoder().encode(feed) {
-            UserDefaults.standard.set(data, forKey: key)
-        }
-    }
-
-    private func shouldGenerateNewFeed() -> Bool {
-        let lastGenerationDate = UserDefaults.standard.object(forKey: "lastGenerationDate") as? Date
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
-
-        if let lastDate = lastGenerationDate, calendar.isDate(lastDate, inSameDayAs: today) {
-            return false
-        }
-        return true
-    }
-
-    private func saveLastGenerationDate() {
-        UserDefaults.standard.set(Date(), forKey: "lastGenerationDate")
-    }
-
-    private func scheduleDailyGenerationIfNeeded() {
-        if shouldGenerateNewFeed() {
-            fetchDailyFeed(isNew: true)
-        }
-    }
-
-    private func requestNotificationAuthorization() {
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, error in
-            if let error = error {
-                print("Notification permission error: \(error.localizedDescription)")
-            }
-        }
-    }
-
-    private func scheduleNotification() {
-        let content = UNMutableNotificationContent()
-        content.title = "Your New Daily Horoscope is Ready! 🌟"
-        content.body = "Tap to check your updated lucky number, color, and predictions!"
-        content.sound = .default
-
-        var dateComponents = DateComponents()
-        dateComponents.hour = 0
-        dateComponents.minute = 0
-
-        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
-        let request = UNNotificationRequest(identifier: "dailyHoroscopeNotification", content: content, trigger: trigger)
-
-        UNUserNotificationCenter.current().add(request) { error in
-            if let error = error {
-                print("Failed to schedule notification: \(error.localizedDescription)")
-            }
-        }
-    }
-
-    private func registerBackgroundTask() {
-        BGTaskScheduler.shared.register(forTaskWithIdentifier: "com.yourapp.dailyHoroscopeRefresh", using: nil) { task in
-            self.handleBackgroundTask(task: task as! BGAppRefreshTask)
-        }
-    }
-
-    private func handleBackgroundTask(task: BGAppRefreshTask) {
-        fetchDailyFeed(isNew: true)
-        task.setTaskCompleted(success: true)
-    }
-
-    struct ZodiacFeed: Codable {
-        let zodiacSign: String
-        let message: String
-        let luckyNumber: String
-        let luckyColor: String
-    }
-
     struct OpenAIResponse: Codable {
         struct Choice: Codable {
             struct Message: Codable {
@@ -283,4 +415,5 @@ class FeedsViewModel: ObservableObject {
         }
         let data: [Data]
     }
+    
 }

@@ -3,85 +3,105 @@ import SwiftUI
 struct CustomBottomBar: View {
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 70, style: .continuous) // Adjusted corner radius
-                .fill(Color.black.opacity(0.8))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 70, style: .continuous) // Match corner radius
-                        .stroke(Color.purple, lineWidth: 2)
-                )
-                .frame(height: 100)
-                .edgesIgnoringSafeArea(.bottom) // Ignore the safe area to fully occupy the bottom
-                .clipShape(
-                    RoundedCornerShape(
-                        topLeft: 30,
-                        topRight: 30,
-                        bottomLeft: 0,
-                        bottomRight: 0
-                    )
-                ) // Add specific rounded corners
+            // Background Bar
+            RoundedRectangle(cornerRadius: 35, style: .continuous)
+                .fill(Color.white.opacity(0.95)) // Softer, lighter background
+                .shadow(color: .black.opacity(0.2), radius: 20, x: 0, y: 10) // Stronger shadow for a floating effect
+                .frame(height: 90)
+                .edgesIgnoringSafeArea(.bottom)
 
             HStack {
                 // Group 1: Home and Feeds
-                HStack(spacing: 30) {
+                HStack(spacing: 50) {
                     // Home Button
                     Button(action: {
                         // Home button action
                     }) {
-                        Image(systemName: "house.fill")
-                            .font(.title)
-                            .foregroundColor(.white)
+                        VStack(spacing: 5) {
+                            Image(systemName: "house.fill")
+                                .font(.system(size: 22))
+                                .foregroundColor(.purple)
+                            Text("Home")
+                                .font(.caption)
+                                .foregroundColor(.purple)
+                        }
                     }
 
                     // Feeds Button
                     NavigationLink(destination: FeedsView()) {
-                        Image(systemName: "newspaper.fill")
-                            .font(.title)
-                            .foregroundColor(.white)
+                        VStack(spacing: 5) {
+                            Image(systemName: "newspaper.fill")
+                                .font(.system(size: 22))
+                                .foregroundColor(.gray)
+                            Text("Feeds")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
                     }
                 }
 
-                Spacer(minLength: 50) // Create space between groups
+                Spacer(minLength: 50) // Space around the center button
 
-                // Camera Button (Center)
-                Button(action: {
-                    // Camera button action
-                }) {
-                    Circle()
-                        .fill(Color.purple)
-                        .frame(width: 70, height: 70)
-                        .overlay(
-                            Image(systemName: "camera.circle.fill")
-                                .font(.system(size: 35))
-                                .foregroundColor(.white)
-                        )
-                }
-
-                Spacer(minLength: 50) // Create space between groups
-
-                // Group 2: Heart and Profile
-                HStack(spacing: 30) {
-                    // Heart Button
-                    Button(action: {
-                        // Heart button action
-                    }) {
-                        NavigationLink(destination: MatchedView(userId: "sampleUserId")) {
-                            
-                        
-                        Image(systemName: "heart.fill")
-                            .font(.title)
-                            .foregroundColor(.white)
+                // Group 2: Likes and Profile
+                HStack(spacing: 50) {
+                    // Likes Button
+                    NavigationLink(destination: MatchedView(userId: "sampleUserId")) {
+                        VStack(spacing: 5) {
+                            Image(systemName: "heart.fill")
+                                .font(.system(size: 22))
+                                .foregroundColor(.gray)
+                            Text("Likes")
+                                .font(.caption)
+                                .foregroundColor(.gray)
                         }
                     }
 
                     // Profile Button
                     NavigationLink(destination: UserProfile(userId: "sampleUserId")) {
-                        Image(systemName: "person.circle.fill")
-                            .font(.title)
-                            .foregroundColor(.white)
+                        VStack(spacing: 5) {
+                            Image(systemName: "person.circle.fill")
+                                .font(.system(size: 22))
+                                .foregroundColor(.gray)
+                            Text("Profile")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
                     }
                 }
             }
             .padding(.horizontal, 30)
+
+            // Floating Center Button
+            Button(action: {
+                // Camera button action
+            }) {
+                ZStack {
+                    Circle()
+                        .fill(LinearGradient(
+                            gradient: Gradient(colors: [Color.purple, Color.pink]),
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ))
+                        .frame(width: 75, height: 75)
+                        .shadow(color: .purple.opacity(0.3), radius: 10, x: 0, y: 5)
+
+                    Circle()
+                        .stroke(
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color.white.opacity(0.8), Color.pink.opacity(0.7)]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 5
+                        )
+                        .frame(width: 85, height: 85)
+                    
+                    Image(systemName: "camera.fill")
+                        .font(.system(size: 30))
+                        .foregroundColor(.white)
+                }
+            }
+            .offset(y: -40) // Offset to make it float above the bar
         }
     }
 }

@@ -39,7 +39,6 @@ struct OTPView: View {
                     viewModel.verifyOtp(otp: otpText) { success in
                         if success {
                             dismiss() // Ensure the current modal is dismissed
-                            showNextView = true // Navigate to the next view after dismissal
                         } else {
                             viewModel.errorMessage = "Invalid or expired OTP."
                             viewModel.showError = true

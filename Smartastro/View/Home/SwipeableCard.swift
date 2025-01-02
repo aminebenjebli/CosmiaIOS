@@ -36,67 +36,62 @@ struct SwipeableCard: View {
 
             // Overlay Content
             VStack {
-                    Spacer()
+                Spacer()
 
-                            // User's Name and Zodiac Sign at the Bottom
-                            VStack(alignment: .leading, spacing: 4) {
-                                
-                                Text(content)
-                                    .font(.title3)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.white)
-                            }
-                            .padding()
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .cornerRadius(20)
+                // User's Name and Zodiac Sign at the Bottom
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(content)
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                }
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .cornerRadius(20)
 
                 // Like and Dislike Buttons
-                HStack {
-                    Spacer()
-
-                    VStack(spacing: 50) {
-                        Button(action: {
-                            withAnimation(.spring()) {
-                                offset = CGSize(width: -500, height: 0) // Simulate swipe left
-                            }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                onSwipedLeft()
-                                resetPosition()
-                            }
-                        }) {
-                            Circle()
-                                .fill(Color.white)
-                                .frame(width: 60, height: 60)
-                                .shadow(radius: 5)
-                                .overlay(
-                                    Image(systemName: "xmark")
-                                        .foregroundColor(.red)
-                                        .font(.title)
-                                )
+                HStack(spacing: 50) { // Place buttons next to each other
+                    Button(action: {
+                        withAnimation(.spring()) {
+                            offset = CGSize(width: -500, height: 0) // Simulate swipe left
                         }
-
-                        Button(action: {
-                            withAnimation(.spring()) {
-                                offset = CGSize(width: 500, height: 0) // Simulate swipe right
-                            }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                                onSwipedRight()
-                                resetPosition()
-                            }
-                        }) {
-                            Circle()
-                                .fill(Color.white)
-                                .frame(width: 60, height: 60)
-                                .shadow(radius: 5)
-                                .overlay(
-                                    Image(systemName: "heart.fill")
-                                        .foregroundColor(.green)
-                                        .font(.title)
-                                )
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            onSwipedLeft()
+                            resetPosition()
                         }
+                    }) {
+                        Circle()
+                            .fill(Color.white)
+                            .frame(width: 60, height: 60)
+                            .shadow(radius: 5)
+                            .overlay(
+                                Image(systemName: "xmark")
+                                    .foregroundColor(.red)
+                                    .font(.title)
+                            )
                     }
-                    .padding(.trailing, 16)
+
+                    Button(action: {
+                        withAnimation(.spring()) {
+                            offset = CGSize(width: 500, height: 0) // Simulate swipe right
+                        }
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            onSwipedRight()
+                            resetPosition()
+                        }
+                    }) {
+                        Circle()
+                            .fill(Color.white)
+                            .frame(width: 60, height: 60)
+                            .shadow(radius: 5)
+                            .overlay(
+                                Image(systemName: "heart.fill")
+                                    .foregroundColor(.green)
+                                    .font(.title)
+                            )
+                    }
                 }
+                .padding(.bottom, 16) // Add some padding at the bottom
             }
         }
         .frame(width: 300, height: 400)

@@ -48,7 +48,7 @@ class LoginViewModel: ObservableObject {
     func loginUser(completion: @escaping (LoginStatus) -> Void) {
         guard !isLoginInProgress else {
             print("Login already in progress. Ignoring duplicate request.")
-            return // Prevent duplicate requests
+            return
         }
         isLoginInProgress = true
         print("Starting login process...")
@@ -99,73 +99,66 @@ class LoginViewModel: ObservableObject {
 
                 print("HTTP Response Status Code: \(httpResponse.statusCode)")
 
-                if httpResponse.statusCode == 404 {
-                    print("Account does not exist.")
-                    completion(.accountDoesNotExist)
-                    return
-                }
-
                 do {
-                    if let jsonResponse = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-                       let token = jsonResponse["access_token"] as? String,
-                       let user = jsonResponse["user"] as? [String: Any],
-                       let userId = user["id"] as? String,
-                       let username = user["username"] as? String,
-                       let email = user["email"] as? String {
+                    if let jsonResponse = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                        print("Full JSON response: \(jsonResponse)")
 
-                        print("Login successful. Access token received.")
-
-                        // Decode token to extract additional fields
-                        var decodedDateOfBirth: Date = Date() // Default to current date
-                        var matches: [String] = [] // Default empty matches
-                        if let tokenData = self.decodeJWT(token: token) {
-                            print("Decoded Token Payload: \(tokenData)")
-                            
-                            // Extract dateOfBirth
-                            if let dobString = tokenData["dateOfBirth"] as? String {
-                                let dateFormatter = ISO8601DateFormatter()
-                                dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-                                if let dob = dateFormatter.date(from: dobString) {
-                                    decodedDateOfBirth = dob
-                                    print("Decoded dateOfBirth from token: \(dob)")
-                                } else {
-                                    print("Failed to parse dateOfBirth string: \(dobString)")
-                                }
-                            } else {
-                                print("dateOfBirth not found in token payload.")
-                            }
-                            
-                            // Extract matches
-                            if let matchesArray = tokenData["matches"] as? [String] {
-                                matches = matchesArray
-                                print("Decoded matches from token: \(matches)")
-                            } else {
-                                print("matches not found in token payload.")
-                            }
+                        if let otpRequired = jsonResponse["otpRequired"] as? Int, otpRequired == 1 {
+                            print("OTP is required. Triggering OTP flow.")
+                            self.sendOtp()
+                            completion(.otpRequired)
+                            return
                         }
 
-                        // Save session with the decoded fields
-                        SessionManager.shared.saveSession(
-                            userId: userId,
-                            accessToken: token,
-                            username: username,
-                            password: self.password,
-                            email: email,
-                            dateOfBirth: decodedDateOfBirth,
-                            matches: matches
-                        )
-                        print("SessionManager saved session for User ID: \(userId)")
+                        if let token = jsonResponse["access_token"] as? String,
+                           let user = jsonResponse["user"] as? [String: Any],
+                           let userId = user["id"] as? String,
+                           let username = user["username"] as? String,
+                           let email = user["email"] as? String {
 
-                        // Update UserSession
-                        UserSession.shared.userId = userId
-                        UserSession.shared.accessToken = token
-                        UserSession.shared.username = username
-                        UserSession.shared.password = self.password
+                            print("Login successful. Access token received.")
 
-                        print("UserSession Updated: User ID: \(userId), Username: \(username), Access Token: \(token)")
-                        completion(.success)
+                            var decodedDateOfBirth: Date = Date()
+                            var matches: [String] = []
+
+                            if let tokenData = self.decodeJWT(token: token) {
+                                print("Decoded Token Payload: \(tokenData)")
+                                
+                                if let dobString = tokenData["dateOfBirth"] as? String {
+                                    let dateFormatter = ISO8601DateFormatter()
+                                    dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+                                    if let dob = dateFormatter.date(from: dobString) {
+                                        decodedDateOfBirth = dob
+                                    }
+                                }
+
+                                if let matchesArray = tokenData["matches"] as? [String] {
+                                    matches = matchesArray
+                                }
+                            }
+
+                            SessionManager.shared.saveSession(
+                                userId: userId,
+                                accessToken: token,
+                                username: username,
+                                password: self.password,
+                                email: email,
+                                dateOfBirth: decodedDateOfBirth,
+                                matches: matches
+                            )
+
+                            UserSession.shared.userId = userId
+                            UserSession.shared.accessToken = token
+                            UserSession.shared.username = username
+                            UserSession.shared.password = self.password
+
+                            completion(.success)
+                        } else {
+                            self.errorMessage = "Login failed. Please try again."
+                            self.showError = true
+                            completion(.error)
+                        }
                     } else {
-                        print("Unexpected server response. Login failed.")
                         self.errorMessage = "Login failed. Please try again."
                         self.showError = true
                         completion(.error)
@@ -292,9 +285,9 @@ class LoginViewModel: ObservableObject {
                     do {
                         if let jsonResponse = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
                             print("Server response after OTP verification: \(jsonResponse)")
-                            self.errorMessage = "OTP verified successfully. Redirecting to home."
+                            self.errorMessage = "OTP verified successfully."
                             self.showError = false
-                            completion(true) // Navigate to home
+                            completion(true) // Notify successful verification
                         } else {
                             print("Failed to parse server response after OTP verification.")
                             self.errorMessage = "Failed to parse server response."

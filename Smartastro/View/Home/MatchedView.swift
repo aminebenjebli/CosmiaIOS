@@ -2,16 +2,23 @@ import SwiftUI
 
 struct MatchedView: View {
     @StateObject private var viewModel: UserProfileViewModel
-    @State private var isLoading: Bool = false
 
     init(userId: String) {
         _viewModel = StateObject(wrappedValue: UserProfileViewModel(userId: userId))
     }
 
     var body: some View {
-        NavigationView {
-            ZStack {
-                BackgroundGradientView()
+        ZStack {
+            BackgroundGradientView()
+
+            VStack {
+                HStack {
+                    CustomBackButton()
+                    Spacer()
+                }
+                .padding()
+                
+                Spacer(minLength: 10) // Adds space below the back button
                 
                 if viewModel.isLoading {
                     LoadingView()
@@ -23,16 +30,14 @@ struct MatchedView: View {
                     MatchesGridView(viewModel: viewModel)
                 }
             }
-            .onAppear {
-                viewModel.fetchMatches()
-            }
-            .navigationBarBackButtonHidden(true) // Hide default back button
-           
-            }
-            .navigationTitle("Your Matches")
         }
+        .onAppear {
+            viewModel.fetchMatches()
+        }
+        .navigationTitle("Your Matches")
+        .navigationBarHidden(true) // Hide default navigation bar
     }
-
+}
 
 struct BackgroundGradientView: View {
     var body: some View {
@@ -140,7 +145,6 @@ struct MatchedUserView: View {
         )
     }
 }
-
 
 struct CustomBackButton: View {
     @Environment(\.presentationMode) var presentationMode

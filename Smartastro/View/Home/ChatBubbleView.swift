@@ -1,18 +1,21 @@
 import SwiftUI
+
 struct ChatBubble: View {
     let message: Message
     let isFromSender: Bool
-    
+
     var body: some View {
         HStack {
             if isFromSender {
                 Spacer()
-                Text(message.content)
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(20)
-                    .frame(maxWidth: UIScreen.main.bounds.width * 0.7, alignment: .trailing)
+                if let content = message.content {
+                    Text(content)
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(20)
+                        .frame(maxWidth: UIScreen.main.bounds.width * 0.7, alignment: .trailing)
+                }
                 Text(message.createdAtFormatted)
                     .font(.caption2)
                     .foregroundColor(.gray)
@@ -20,12 +23,14 @@ struct ChatBubble: View {
             } else {
                 VStack(alignment: .leading) {
                     HStack {
-                        Text(message.content)
-                            .padding()
-                            .background(Color(.systemGray5))
-                            .foregroundColor(.black)
-                            .cornerRadius(20)
-                            .frame(maxWidth: UIScreen.main.bounds.width * 0.7, alignment: .leading)
+                        if let content = message.content {
+                            Text(content)
+                                .padding()
+                                .background(Color(.systemGray5))
+                                .foregroundColor(.black)
+                                .cornerRadius(20)
+                                .frame(maxWidth: UIScreen.main.bounds.width * 0.7, alignment: .leading)
+                        }
                         Spacer()
                     }
                     Text(message.createdAtFormatted)
@@ -39,6 +44,7 @@ struct ChatBubble: View {
         .padding(.vertical, 2)
     }
 }
+
 extension Message {
     var createdAtFormatted: String {
         let formatter = DateFormatter()
