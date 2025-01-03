@@ -7,6 +7,7 @@ class UserProfileViewModel: ObservableObject {
     @Published var username: String = ""
     @Published var email: String = ""
     @Published var password: String = ""
+    @Published var gender: String? = ""
     @Published var confirmPassword: String = ""
     @Published var dateOfBirth: Date = Date() // Use Date for dateOfBirth
     @Published var errorMessage: String? = nil
@@ -80,10 +81,12 @@ class UserProfileViewModel: ObservableObject {
                     if let userResponse = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
                        let username = userResponse["username"] as? String,
                        let email = userResponse["email"] as? String,
+                       let gender = userResponse["gender"] as? String,
                        let dobString = userResponse["dateOfBirth"] as? String {
                         self?.username = username
                         self?.email = email
                         self?.dateOfBirth = self?.dateFormatter.date(from: dobString) ?? Date() // Parse the date
+                        self?.gender = gender
                         print("Fetched user: \(username), \(email), dateOfBirth=\(self?.dateOfBirth ?? Date())")
                     } else {
                         self?.handleError("Failed to decode user data.")
@@ -210,6 +213,7 @@ class UserProfileViewModel: ObservableObject {
                 }
             }, receiveValue: { [weak self] usersWithAlbums in
                 self?.users = usersWithAlbums
+                print("Fetched users: \(usersWithAlbums.map { "\($0.username): \($0.gender ?? "No gender")" })")
             })
             .store(in: &cancellables)
     }
@@ -346,6 +350,13 @@ class UserProfileViewModel: ObservableObject {
     func filterUsers(by criteria: FilterCriteria) {
         // Get the current user's date of birth as a string
         let currentUserDateOfBirthString = dateFormatter.string(from: dateOfBirth)
+            // declare currentUserGender
+        guard let currentUserGender = sessionManager.getActiveSession()?.gender else {
+            errorMessage = "Gender not found in session."
+            return
+            }
+        print("Current user gender: \(currentUserGender)")
+
 
         switch criteria {
         case .zodiacSameSign:
@@ -380,8 +391,24 @@ class UserProfileViewModel: ObservableObject {
         case .allUsers:
             // Reset the filter and fetch all users
             fetchAllUsersWithAlbums()
-        }
-    }
+      
+        case.genderMatch:
+            print("Filtering users by gender. Current user gender: \(currentUserGender)")
+            guard currentUserGender.lowercased() == "male" || currentUserGender.lowercased() == "female" else {
+                   print("Invalid or unspecified gender. Showing all users.")
+                   fetchAllUsersWithAlbums()
+                   return
+               }
+            let targetGender = currentUserGender.lowercased() == "male" ? "female" : "male"
+            print("Target gender for filtering: \(targetGender)")
+            let filteredUsers = users.filter { user in
+                    user.gender?.lowercased() == targetGender
+                }
+            print("Filtered users: \(filteredUsers.map { "\($0.username): \($0.gender ?? "No gender")" })")
+                users = filteredUsers
+        }//case
+    }//filterbycriteria
+    
 
 
 

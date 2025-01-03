@@ -121,6 +121,7 @@ class LoginViewModel: ObservableObject {
 
                             var decodedDateOfBirth: Date = Date()
                             var matches: [String] = []
+                            var decodedGender: String = ""
 
                             if let tokenData = self.decodeJWT(token: token) {
                                 print("Decoded Token Payload: \(tokenData)")
@@ -136,6 +137,10 @@ class LoginViewModel: ObservableObject {
                                 if let matchesArray = tokenData["matches"] as? [String] {
                                     matches = matchesArray
                                 }
+
+                                if let gender = tokenData["gender"] as? String {
+                                    decodedGender = gender
+                                }
                             }
 
                             SessionManager.shared.saveSession(
@@ -146,7 +151,7 @@ class LoginViewModel: ObservableObject {
                                 email: email,
                                 dateOfBirth: decodedDateOfBirth,
                                 matches: matches,
-                                gender: self.gender
+                                gender: decodedGender
                             )
 
                             UserSession.shared.userId = userId
@@ -174,6 +179,7 @@ class LoginViewModel: ObservableObject {
             }
         }.resume()
     }
+
 
 
     func decodeJWT(token: String) -> [String: Any]? {
