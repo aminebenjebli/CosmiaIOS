@@ -18,17 +18,28 @@ struct StoryBar: View {
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 15) {
-                        // Add Story Button
-                        Button(action: {
-                            showImagePicker.toggle()
-                        }) {
-                            StoryCirclePlaceholder()
+                        // Current User's Story Circle
+                        StoryCircle(
+                            username: "Your Story",
+                            stories: storyViewModel.userStories
+                        )
+                        .onTapGesture {
+                            print("Current user stories: \(storyViewModel.userStories)")
+                            if !storyViewModel.userStories.isEmpty {
+                                selectedStories = storyViewModel.userStories
+                            }
                         }
+                        .overlay(
+                            AddStoryButton {
+                                showImagePicker.toggle()
+                            }
+                            .offset(x: 30, y: -30) // Position in the top-right corner
+                        )
                         .sheet(isPresented: $showImagePicker) {
                             ImagePickerViewForStories(viewModel: storyViewModel, isPresented: $showImagePicker)
                         }
 
-                        // Display grouped stories (one circle per user)
+                        // Other Users' Stories
                         ForEach(Array(storyViewModel.groupedStories.keys), id: \.self) { userId in
                             if let stories = storyViewModel.groupedStories[userId], let username = stories.first?.username {
                                 StoryCircle(username: username, stories: stories)
@@ -53,21 +64,21 @@ struct StoryBar: View {
     }
 }
 
-struct StoryCirclePlaceholder: View {
+struct AddStoryButton: View {
+    var action: () -> Void
+
     var body: some View {
-        VStack {
+        Button(action: action) {
             ZStack {
                 Circle()
-                    .fill(Color.blue.opacity(0.3))
-                    .frame(width: 80, height: 80)
+                    .fill(Color.blue.opacity(0.8))
+                    .frame(width: 30, height: 30)
                 Image(systemName: "plus")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 30, height: 30)
-                    .foregroundColor(.indigo)
+                    .frame(width: 15, height: 15)
+                    .foregroundColor(.white)
             }
-            Text("Your Story")
-                .font(.caption)
         }
     }
 }

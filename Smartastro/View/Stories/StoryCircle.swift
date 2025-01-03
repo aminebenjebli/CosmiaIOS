@@ -7,20 +7,27 @@ struct StoryCircle: View {
     var body: some View {
         VStack {
             Circle()
-                .strokeBorder(Color.orange, lineWidth: 3)
+                .strokeBorder(stories.isEmpty ? Color.blue : Color.orange, lineWidth: 3)
                 .frame(width: 80, height: 80)
                 .background(
                     AsyncImage(url: URL(string: stories.first?.imageUrl ?? "")) { image in
                         image.resizable().scaledToFill()
                     } placeholder: {
-                        Color.gray.opacity(0.3)
+                        if stories.isEmpty {
+                            Image(systemName: "plus")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 30, height: 30)
+                                .foregroundColor(.blue)
+                        } else {
+                            Color.gray.opacity(0.3)
+                        }
                     }
                     .clipShape(Circle())
                 )
-            Text(username) // Display username
+            Text(username)
                 .font(.caption)
                 .lineLimit(1)
         }
     }
 }
-

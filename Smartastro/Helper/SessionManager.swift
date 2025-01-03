@@ -71,11 +71,12 @@ class SessionManager {
         }
     }
 
-    func updateSession(session: Session, username: String, email: String, dateOfBirth: Date, gender: String) {
+    func updateSession(session: Session, username: String, email: String, dateOfBirth: Date, gender: String,matches: String) {
         session.username = username
         session.email = email
         session.dateOfBirth = dateOfBirth
         session.gender = gender
+        session.matches = matches
 
         do {
             try context.save()

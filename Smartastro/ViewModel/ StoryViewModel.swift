@@ -21,32 +21,41 @@ class StoryViewModel: ObservableObject {
             errorMessage = "User not logged in."
             return
         }
-        
+
         isLoading = true
-        
-        // Combine fetching user stories and other users' stories
+
         Publishers.Zip(fetchUserStories(for: currentUserId), fetchOtherStories(for: currentUserId))
-                    .receive(on: DispatchQueue.main)
-                    .sink { [weak self] completion in
-                        self?.isLoading = false
-                        if case .failure(let error) = completion {
-                            self?.errorMessage = "Failed to fetch stories: \(error.localizedDescription)"
-                        }
-                    } receiveValue: { [weak self] userStories, otherStories in
-                        self?.mapUsernamesToStories(stories: otherStories) { updatedStories in
-                            self?.groupStories(userStories: userStories, otherStories: updatedStories)
-                        }
-                    }
-                    .store(in: &cancellables)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                self?.isLoading = false
+                if case .failure(let error) = completion {
+                    self?.errorMessage = "Failed to fetch stories: \(error.localizedDescription)"
+                }
+            } receiveValue: { [weak self] userStories, otherStories in
+                print("Fetched user stories: \(userStories)")
+                self?.userStories = userStories // Ensure this gets assigned
+                self?.mapUsernamesToStories(stories: otherStories) { updatedStories in
+                    self?.groupStories(userStories: userStories, otherStories: updatedStories)
+                }
+            }
+            .store(in: &cancellables)
     }
+
     
     private func fetchUserStories(for userId: String) -> AnyPublisher<[Story], Error> {
-            let url = URL(string: "\(baseUrl)/user/\(userId)")!
-            return URLSession.shared.dataTaskPublisher(for: url)
-                .map(\.data)
-                .decode(type: [Story].self, decoder: JSONDecoder())
-                .eraseToAnyPublisher()
-        }
+        let url = URL(string: "\(baseUrl)/user/\(userId)")!
+        print("Fetching user stories for userId: \(userId) from \(url)")
+        return URLSession.shared.dataTaskPublisher(for: url)
+            .map(\.data)
+            .handleEvents(receiveOutput: { data in
+                if let jsonString = String(data: data, encoding: .utf8) {
+                    print("Response JSON for user stories: \(jsonString)")
+                }
+            })
+            .decode(type: [Story].self, decoder: JSONDecoder())
+            .eraseToAnyPublisher()
+    }
+
     
     private func fetchOtherStories(for currentUserId: String) -> AnyPublisher<[Story], Error> {
             let url = URL(string: "\(baseUrl)/other?currentUserId=\(currentUserId)")!
@@ -127,6 +136,7 @@ class StoryViewModel: ObservableObject {
             }
             .store(in: &cancellables)
     }
+
 
     private func handleCompletion(_ completion: Subscribers.Completion<Error>) {
         isLoading = false
