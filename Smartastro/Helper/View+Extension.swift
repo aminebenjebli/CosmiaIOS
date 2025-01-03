@@ -35,11 +35,12 @@ enum Astrofont: String {
     case regular = "PlayfulTime-BLBB8"
 }
 extension Font {
-    
     static func customfont(_ font: Astrofont, fontSize: CGFloat) -> Font {
         custom(font.rawValue, size: fontSize)
     }
 }
+
+//Notif
 extension Notification.Name {
     static let userLoggedOut = Notification.Name("userLoggedOut")
 }

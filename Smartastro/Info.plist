@@ -4,7 +4,7 @@
 <dict>
 	<key>UIAppFonts</key>
 	<array>
-		<string>PlayfulTime-BLBB8.ttf</string>
+		<string>font/PlayfulTime-BLBB8.ttf</string>
 	</array>
 	<key>UILaunchScreen</key>
 	<dict/>

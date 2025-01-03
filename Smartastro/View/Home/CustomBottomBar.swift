@@ -12,7 +12,7 @@ struct CustomBottomBar: View {
 
             HStack {
                 // Group 1: Home and Feeds
-                HStack(spacing: 50) {
+                HStack(spacing: 40) { // Reduced spacing for closer alignment
                     // Home Button
                     Button(action: {
                         // Home button action
@@ -40,10 +40,10 @@ struct CustomBottomBar: View {
                     }
                 }
 
-                Spacer(minLength: 50) // Space around the center button
+                Spacer(minLength: 70) // Adjusted spacer for better symmetry around the center button
 
                 // Group 2: Likes and Profile
-                HStack(spacing: 50) {
+                HStack(spacing: 40) { // Reduced spacing for closer alignment
                     // Likes Button
                     NavigationLink(destination: MatchedView(userId: "sampleUserId")) {
                         VStack(spacing: 5) {
@@ -69,7 +69,8 @@ struct CustomBottomBar: View {
                     }
                 }
             }
-            .padding(.horizontal, 30)
+            .padding(.horizontal, 20) // Reduced padding for compact layout
+
 
             // Floating Center Button
             Button(action: {

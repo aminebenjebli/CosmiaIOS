@@ -15,7 +15,7 @@ struct HomeView: View {
                 VStack(spacing: 0) {
                     // Home Title
                     Text("Cosmia")
-                        .font(.largeTitle)
+                        .font(.customfont(.regular, fontSize: 24))//Customfont
                         .fontWeight(.heavy)
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity, alignment: .leading)

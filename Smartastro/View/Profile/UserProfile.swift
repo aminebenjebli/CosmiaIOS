@@ -33,7 +33,7 @@ struct UserProfile: View {
                             .clipShape(Circle())
 
                         Text(viewModel.username)
-                            .font(.title)
+                            .font(.customfont(.regular, fontSize: 30))
                             .fontWeight(.bold)
                             .foregroundColor(.white)
 
