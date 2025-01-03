@@ -94,6 +94,8 @@ class UserProfileViewModel: ObservableObject {
             }
         }.resume()
     }
+    
+                                //function update Profile //
 
     func updateProfile() {
         guard isFormValid else {
@@ -121,7 +123,9 @@ class UserProfileViewModel: ObservableObject {
             "username": username,
             "email": email,
             "password": password,
-            "dateOfBirth": dateFormatter.string(from: dateOfBirth) // Convert Date to String
+            "dateOfBirth": dateFormatter.string(from: dateOfBirth), // Convert Date to String
+            "gender": sessionManager.getActiveSession()?.gender ?? "Select gender"
+
         ]
         do {
             request.httpBody = try JSONSerialization.data(withJSONObject: updateData, options: [])
@@ -153,7 +157,8 @@ class UserProfileViewModel: ObservableObject {
                     password: self?.password ?? "",
                     email: self?.email ?? "",
                     dateOfBirth: self?.dateOfBirth ?? Date(),
-                    matches : matches
+                    matches : matches,
+                    gender: self?.sessionManager.getActiveSession()?.gender ?? ""
                 )
 
                 self?.successMessage = "Profile updated successfully."
@@ -422,8 +427,4 @@ class UserProfileViewModel: ObservableObject {
             print("Fetched all matched users: \(matchedUsers.map { $0.username })")
         }
     }
-
-
-
-
 }

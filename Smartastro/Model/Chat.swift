@@ -1,10 +1,3 @@
-//
-//  Chat.swift
-//  Smartastro
-//
-//  Created by Aziz on 12/30/24.
-//
-
 import Foundation
 
 

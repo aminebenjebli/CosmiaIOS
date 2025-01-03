@@ -80,7 +80,7 @@ struct UserProfile: View {
                             .accentColor(.white)
                             .opacity(0.6)
                             //Gender
-                            CustomGender()
+                            CustomGender(selectedGender: $updateViewModel.gender)
                                 .opacity(0.6)
                             
                             Spacer().frame(height: 30)

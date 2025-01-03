@@ -105,6 +105,7 @@ struct SettingsView: View {
     
     private func handleLogout() {
         SessionManager.shared.clearAllSessions()
+        UserSession.shared.clearSession()
         print("UserSession cleared.")
         navigateToLogin = true
     }

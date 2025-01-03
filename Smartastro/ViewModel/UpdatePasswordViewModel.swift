@@ -146,7 +146,8 @@ class UpdatePasswordViewModel: ObservableObject {
                         password: newPassword, // Save the plain password
                         email: session.email ?? "",
                         dateOfBirth: session.dateOfBirth ?? Date(),
-                        matches: matches // Include matches
+                        matches: matches,
+                        gender: session.gender ?? "Select Gender"
                     )
                     print("[UpdatePasswordViewModel] Session updated with new password and matches.")
                 } else {

@@ -24,8 +24,6 @@ struct User: Codable {
         case password
         case dateOfBirth
         case image
-      
-
     }
 }
 

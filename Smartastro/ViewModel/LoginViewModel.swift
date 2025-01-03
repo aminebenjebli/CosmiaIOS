@@ -29,6 +29,7 @@ class LoginViewModel: ObservableObject {
     @Published var errorMessage: String = ""
     @Published var showError: Bool = false
     @Published var userId: String = ""
+    @Published var gender : String = ""
 
     private var isLoginInProgress = false // Prevents multiple login requests
     private var cancellables = Set<AnyCancellable>()
@@ -144,7 +145,8 @@ class LoginViewModel: ObservableObject {
                                 password: self.password,
                                 email: email,
                                 dateOfBirth: decodedDateOfBirth,
-                                matches: matches
+                                matches: matches,
+                                gender: self.gender
                             )
 
                             UserSession.shared.userId = userId

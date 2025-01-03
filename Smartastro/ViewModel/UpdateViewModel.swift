@@ -5,6 +5,7 @@ class UpdateViewModel: ObservableObject {
     @Published var username: String = ""
     @Published var email: String = ""
     @Published var dateOfBirth: Date = Date()
+    @Published var gender : String = ""
     @Published var errorMessage: String? = nil
     @Published var successMessage: String? = nil
     @Published var isUpdating: Bool = false
@@ -31,6 +32,7 @@ class UpdateViewModel: ObservableObject {
         self.username = session.username ?? ""
         self.email = session.email ?? ""
         self.dateOfBirth = session.dateOfBirth ?? Date()
+        self.gender = session.gender ?? "Select Gender"
         print("[UpdateViewModel] Loaded data from session: \(username), \(email), DOB: \(dateOfBirth)")
     }
 
@@ -87,7 +89,8 @@ class UpdateViewModel: ObservableObject {
             password: session.password ?? "",
             email: email,
             dateOfBirth: dateOfBirth,
-            matches: matches // Include matches in the updated session
+            matches: matches,
+            gender: session.gender ?? ""
         )
         print("[UpdateViewModel] Session updated successfully.")
 
@@ -107,7 +110,8 @@ class UpdateViewModel: ObservableObject {
             "id": userId,
             "username": username,
             "email": email,
-            "dateOfBirth": ISO8601DateFormatter().string(from: dateOfBirth) // Ensure date format is compatible
+            "dateOfBirth": ISO8601DateFormatter().string(from: dateOfBirth), // Ensure date format is compatible
+            "gender": gender
         ]
 
         do {
@@ -170,7 +174,8 @@ class UpdateViewModel: ObservableObject {
             password: session.password ?? "",
             email: email,
             dateOfBirth: dateOfBirth,
-            matches: matches // Ensure matches are saved during session update
+            matches: matches,
+            gender: gender
         )
 
         print("[UpdateViewModel] Session successfully updated after backend confirmation.")
