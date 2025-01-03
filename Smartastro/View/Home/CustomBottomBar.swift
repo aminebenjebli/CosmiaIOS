@@ -102,7 +102,7 @@ struct CustomBottomBar: View {
                         .foregroundColor(.white)
                 }
             }
-            .offset(y: -40) // Offset to make it float above the bar
+            .offset(y: -30) // Offset to make it float above the bar
         }
     }
 }

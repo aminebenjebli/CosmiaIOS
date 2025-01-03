@@ -83,7 +83,7 @@ struct MatchesGridView: View {
 
     var body: some View {
         ScrollView {
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 20) {
+            LazyVStack(spacing: 15) { // Vertical list with spacing
                 ForEach(viewModel.users, id: \.id) { user in
                     NavigationLink(
                         destination: ChatView(
@@ -96,55 +96,62 @@ struct MatchesGridView: View {
                     }
                 }
             }
-            .padding()
+            .padding(.horizontal)
         }
     }
 }
+
 
 struct MatchedUserView: View {
     let user: User
 
     var body: some View {
-        VStack(spacing: 8) {
+        HStack(spacing: 15) {
+            // User's Profile Picture
             if let imageUrl = user.albumImages?.first, let url = URL(string: imageUrl) {
                 AsyncImage(url: url) { image in
                     image
                         .resizable()
                         .scaledToFill()
-                        .frame(width: 120, height: 120)
+                        .frame(width: 60, height: 60)
                         .clipShape(Circle())
-                        .overlay(Circle().stroke(Color.white, lineWidth: 3))
-                        .shadow(radius: 5)
+                        .overlay(Circle().stroke(Color.blue, lineWidth: 2))
                 } placeholder: {
                     ProgressView()
-                        .frame(width: 120, height: 120)
+                        .frame(width: 60, height: 60)
                 }
             } else {
                 Image(systemName: "person.fill")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 120, height: 120)
+                    .frame(width: 60, height: 60)
                     .foregroundColor(.white)
                     .background(Circle().fill(Color.gray.opacity(0.4)))
                     .clipShape(Circle())
-                    .overlay(Circle().stroke(Color.indigo, lineWidth: 3))
-                    .shadow(radius: 5)
+                    .overlay(Circle().stroke(Color.blue, lineWidth: 2))
             }
 
-            Text(user.username)
-                .font(.headline)
-                .foregroundColor(.white)
-                .lineLimit(1)
-                .padding(.horizontal, 10)
+            // Username and Details
+            VStack(alignment: .leading, spacing: 5) {
+                Text(user.username)
+                    .font(.headline)
+                    .foregroundColor(.white)
+                Text("Click to chat")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+            }
+
+            Spacer() // Push content to the left
         }
         .padding()
         .background(
-            RoundedRectangle(cornerRadius: 15)
-                .fill(Color.white.opacity(0.2))
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.white.opacity(0.15))
                 .shadow(radius: 5)
         )
     }
 }
+
 
 struct CustomBackButton: View {
     @Environment(\.presentationMode) var presentationMode
