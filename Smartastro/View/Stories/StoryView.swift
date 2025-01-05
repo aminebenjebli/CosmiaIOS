@@ -6,6 +6,7 @@ struct StoryView: View {
     @StateObject private var countTimer: CountTimer
     @Environment(\.presentationMode) var presentationMode // Environment variable for dismissing the view
     @State private var comment: String = "" // State for the comment input
+    @State private var isPaused: Bool = false // State to track if the story is paused
 
     init(images: [String], username: String?) {
         self.images = images
@@ -16,7 +17,7 @@ struct StoryView: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .top) {
-                // Display current story image
+                // Display current story image with tap gesture
                 if let imageURL = URL(string: images[safe: Int(countTimer.progress)] ?? "") {
                     AsyncImage(url: imageURL) { image in
                         image.resizable()
@@ -24,11 +25,23 @@ struct StoryView: View {
                             .frame(width: geometry.size.width, height: geometry.size.height)
                             .edgesIgnoringSafeArea(.all)
                             .onTapGesture {
-                                                            countTimer.advancePage(by: 1) // Go to the next story
-                                                            if Int(countTimer.progress) >= images.count {
-                                                                presentationMode.wrappedValue.dismiss() // Dismiss when all stories are done
-                                                            }
-                                                        }
+                                if !isPaused {
+                                    countTimer.advancePage(by: 1) // Go to the next story
+                                    if Int(countTimer.progress) >= images.count {
+                                        presentationMode.wrappedValue.dismiss() // Dismiss when all stories are done
+                                    }
+                                }
+                            }
+                            .onLongPressGesture(
+                                minimumDuration: 0.3,
+                                pressing: { isPressing in
+                                    if isPressing {
+                                        pauseStory() // Pause when holding
+                                    } else {
+                                        resumeStory() // Resume when released
+                                    }
+                                },perform: {} // Required to fulfill the function signature
+                            )
                     } placeholder: {
                         Color.gray.opacity(0.3)
                     }
@@ -56,22 +69,6 @@ struct StoryView: View {
                 .padding(.horizontal)
                 .padding(.top, 20)
                 .background(Color.black.opacity(0.2))
-
-                // Tap to Navigate
-                HStack {
-                    Rectangle()
-                        .foregroundColor(.clear)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            countTimer.advancePage(by: -1)
-                        }
-                    Rectangle()
-                        .foregroundColor(.clear)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            countTimer.advancePage(by: 1)
-                        }
-                }
 
                 // Footer for Commenting
                 VStack {
@@ -117,6 +114,16 @@ struct StoryView: View {
             .onAppear { countTimer.start() }
             .onDisappear { countTimer.stop() }
         }
+    }
+
+    private func pauseStory() {
+        isPaused = true
+        countTimer.stop() // Stop the timer to pause the story
+    }
+
+    private func resumeStory() {
+        isPaused = false
+        countTimer.start() // Resume the timer to continue the story
     }
 
     private func sendComment() {
