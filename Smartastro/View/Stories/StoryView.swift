@@ -23,6 +23,12 @@ struct StoryView: View {
                             .scaledToFill()
                             .frame(width: geometry.size.width, height: geometry.size.height)
                             .edgesIgnoringSafeArea(.all)
+                            .onTapGesture {
+                                                            countTimer.advancePage(by: 1) // Go to the next story
+                                                            if Int(countTimer.progress) >= images.count {
+                                                                presentationMode.wrappedValue.dismiss() // Dismiss when all stories are done
+                                                            }
+                                                        }
                     } placeholder: {
                         Color.gray.opacity(0.3)
                     }
