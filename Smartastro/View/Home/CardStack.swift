@@ -13,21 +13,14 @@ struct CardStack: View {
         VStack {
             // Filter Menu Button
             HStack {
-                Button(action: {
-                       viewModel.filterUsers(by: .genderMatch)
-                   }) {
-                       HStack {
-                           Image(systemName: "person.fill")
-                               .font(.title2)
-                               .foregroundColor(.white)
-                           Text("Gender")
-                               .font(.body)
-                               .foregroundColor(.white)
-                       }
-                       .padding(.leading, 20)
-                   }
+               
                 Spacer()
                 Menu {
+                    Button(action: {
+                                           viewModel.filterUsers(by: .genderMatch)
+                                       }) {
+                                           Label("Gender Match", systemImage: "person.fill")
+                                       }
                     Button(action: {
                         viewModel.filterUsers(by: .allUsers)
                     }) {
