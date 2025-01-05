@@ -104,7 +104,6 @@ struct CardStack: View {
         .sheet(isPresented: $showMatchView) {
             MatchView(
                 matchedUserName: matchedUserName,
-                onSendMessage: { print("Send Message tapped") },
                 onKeepSwiping: { showMatchView = false }
             )
         }
