@@ -6,6 +6,7 @@ struct StoryBar: View {
     @State private var showImagePicker = false
     @State private var selectedPhoto: UIImage? = nil
     @State private var selectedStories: [Story] = []
+    @State private var selectedUsername: String? = nil // To hold the username of selected stories
 
     var body: some View {
         VStack {
@@ -27,6 +28,7 @@ struct StoryBar: View {
                             print("Current user stories: \(storyViewModel.userStories)")
                             if !storyViewModel.userStories.isEmpty {
                                 selectedStories = storyViewModel.userStories
+                                selectedUsername = nil // No username for the current user
                             }
                         }
                         .overlay(
@@ -45,6 +47,7 @@ struct StoryBar: View {
                                 StoryCircle(username: username, stories: stories)
                                     .onTapGesture {
                                         selectedStories = stories
+                                        selectedUsername = username // Set username for other users
                                     }
                             }
                         }
@@ -59,10 +62,11 @@ struct StoryBar: View {
             get: { !selectedStories.isEmpty },
             set: { _ in selectedStories = [] }
         )) {
-            StoryView(images: selectedStories.map { $0.imageUrl })
+            StoryView(images: selectedStories.map { $0.imageUrl }, username: selectedUsername)
         }
     }
 }
+
 
 struct AddStoryButton: View {
     var action: () -> Void
