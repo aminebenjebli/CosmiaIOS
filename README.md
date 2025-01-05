@@ -44,3 +44,11 @@ Authentication
 Token-based authentication with JWT for secure login and sessions.
 Media Management
 Asynchronous image loading and caching for albums and stories.
+
+Roadmap
+Planned Features:
+ Astrology Games: Fun interactive games for zodiac signs.
+ Story Reactions: Like and react to stories with emojis.
+ Horoscope Sharing: Share your daily horoscope as a story or with matches.
+ Voice and Video Chats: Add real-time communication with matches.
+
