@@ -90,6 +90,7 @@ struct MatchesGridView: View {
                             viewModel: ChatViewModel(),
                             receiverId: user.id ?? "",
                             receiverUsername: user.username
+                            
                         )
                     ) {
                         MatchedUserView(user: user)
@@ -104,44 +105,83 @@ struct MatchesGridView: View {
 
 struct MatchedUserView: View {
     let user: User
-
+    private let dateFormatter: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+    
     var body: some View {
-        HStack(spacing: 15) {
-            // User's Profile Picture
-            if let imageUrl = user.albumImages?.first, let url = URL(string: imageUrl) {
-                AsyncImage(url: url) { image in
-                    image
+        VStack(alignment: .leading, spacing: 15) {
+            HStack(spacing: 15) {
+                // Display Profile Picture (from albumImages or fallback to user image)
+                if let albumImages = user.albumImages, let firstImageUrl = albumImages.first {
+                    AsyncImage(url: URL(string: firstImageUrl)) { image in
+                        image
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 60, height: 60)
+                            .clipShape(Circle())
+                            .overlay(Circle().stroke(Color.blue, lineWidth: 2))
+                            .shadow(radius: 4)
+                    } placeholder: {
+                        Circle()
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(width: 60, height: 60)
+                            .overlay(Text("...").foregroundColor(.white))
+                    }
+                } else if let imageUrl = user.image, let url = URL(string: imageUrl) {
+                    AsyncImage(url: url) { image in
+                        image
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 60, height: 60)
+                            .clipShape(Circle())
+                            .overlay(Circle().stroke(Color.blue, lineWidth: 2))
+                            .shadow(radius: 4)
+                    } placeholder: {
+                        Circle()
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(width: 60, height: 60)
+                            .overlay(Text("...").foregroundColor(.white))
+                    }
+                } else {
+                    Image(systemName: "person.fill")
                         .resizable()
-                        .scaledToFill()
+                        .scaledToFit()
                         .frame(width: 60, height: 60)
+                        .foregroundColor(.white)
+                        .background(Circle().fill(Color.gray.opacity(0.4)))
                         .clipShape(Circle())
                         .overlay(Circle().stroke(Color.blue, lineWidth: 2))
-                } placeholder: {
-                    ProgressView()
-                        .frame(width: 60, height: 60)
                 }
-            } else {
-                Image(systemName: "person.fill")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 60, height: 60)
-                    .foregroundColor(.white)
-                    .background(Circle().fill(Color.gray.opacity(0.4)))
-                    .clipShape(Circle())
-                    .overlay(Circle().stroke(Color.blue, lineWidth: 2))
-            }
 
-            // Username and Details
-            VStack(alignment: .leading, spacing: 5) {
-                Text(user.username)
-                    .font(.headline)
-                    .foregroundColor(.white)
-                Text("Click to chat")
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
-            }
+                // Display User Details
+      
+                    
+            
+                VStack(alignment: .leading, spacing: 5) {
+                    HStack{
+                    Text(user.username)
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        Spacer()
 
-            Spacer() // Push content to the left
+                    if let birthDate = parseISO8601Date(user.dateOfBirth) {
+                        Text("\(birthDate)")
+                            .font(.subheadline)
+                            .foregroundColor(.white.opacity(0.8))
+                    } else {
+                        Text("Birthdate unavailable")
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                    }
+                }
+                }
+                
+
+                Spacer()
+            }
         }
         .padding()
         .background(
@@ -149,6 +189,16 @@ struct MatchedUserView: View {
                 .fill(Color.white.opacity(0.15))
                 .shadow(radius: 5)
         )
+    }
+
+    // MARK: - Helper to Parse ISO8601 Date
+    private func parseISO8601Date(_ dateString: String) -> String? {
+        if let date = dateFormatter.date(from: dateString) {
+            let outputFormatter = DateFormatter()
+            outputFormatter.dateStyle = .medium
+            return outputFormatter.string(from: date) // e.g., "Jan 5, 2025"
+        }
+        return nil
     }
 }
 
