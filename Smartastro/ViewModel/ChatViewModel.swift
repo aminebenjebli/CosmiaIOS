@@ -1,9 +1,12 @@
 import Foundation
 import Combine
+
+
 enum CallType {
     case video
     case phone
 }
+
 class ChatViewModel: ObservableObject {
     @Published var messages: [Message] = []
     @Published var isLoading: Bool = false

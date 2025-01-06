@@ -113,6 +113,10 @@ struct TopicSuggestionsView: View {
     }
 }
 
+import SwiftUI
+
+import SwiftUI
+
 struct ChatHeaderView: View {
     var username: String
     var receiverId: String
@@ -124,10 +128,10 @@ struct ChatHeaderView: View {
     @State private var showCoupleRequest: Bool = false
     @State private var isRequestSending: Bool = false
     @State private var isLoadingCoupleStatus: Bool = false
+    @State private var showGameView = false
 
     var body: some View {
         HStack {
-            // Back Button
             Button(action: {
                 presentationMode.wrappedValue.dismiss()
             }) {
@@ -139,14 +143,12 @@ struct ChatHeaderView: View {
 
             Spacer()
 
-            // Display appropriate button based on couple status
             if isLoadingCoupleStatus {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
             } else if couplesViewModel.isCouple {
                 Button(action: {
-                    print("[ChatHeaderView] Play Game button tapped!")
-                    // Navigate to game view or perform a game-related action
+                    showGameView = true
                 }) {
                     HStack(spacing: 4) {
                         Image(systemName: "gamecontroller.fill")
@@ -160,6 +162,11 @@ struct ChatHeaderView: View {
                     .padding(6)
                     .background(Capsule().fill(Color.white))
                     .shadow(radius: 2)
+                }
+                .sheet(isPresented: $showGameView) {
+                    ContentViewWrapper { score in
+                        viewModel.sendMessage(to: receiverId, content: "I scored \(score) points in the game!")
+                    }
                 }
             } else if !couplesViewModel.eitherIsCoupled {
                 Button(action: {
@@ -193,7 +200,6 @@ struct ChatHeaderView: View {
 
             Spacer()
 
-            // Chat Title
             Text("Chat with \(username)")
                 .font(.headline)
                 .fontWeight(.semibold)
@@ -201,7 +207,6 @@ struct ChatHeaderView: View {
 
             Spacer()
 
-            // Video Call Button
             Button(action: {
                 showVideoCallView = true
                 viewModel.sendCallMessage(to: receiverId, type: .video)
@@ -215,7 +220,6 @@ struct ChatHeaderView: View {
                 VideoCallView(isPresented: $showVideoCallView, receiverName: username)
             }
 
-            // Phone Call Button
             Button(action: {
                 showPhoneCallView = true
                 viewModel.sendCallMessage(to: receiverId, type: .phone)
@@ -235,24 +239,50 @@ struct ChatHeaderView: View {
         }
     }
 
-    // MARK: - Fetch Couple Status
     private func fetchCoupleStatus() {
         isLoadingCoupleStatus = true
         let userId = SessionManager.shared.getActiveSession()?.userId ?? ""
-        print("[ChatHeaderView] Fetching couple status for userId: \(userId), receiverId: \(receiverId)")
         couplesViewModel.checkCoupleStatusForBoth(userId: userId, receiverId: receiverId)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             isLoadingCoupleStatus = false
         }
     }
 
-    // MARK: - Send Couple Request
     private func sendCoupleRequest() {
         isRequestSending = true
         let senderId = SessionManager.shared.getActiveSession()?.userId ?? ""
         couplesViewModel.sendCoupleRequest(senderId: senderId, receiverId: receiverId)
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             isRequestSending = false
+        }
+    }
+}
+
+struct ContentViewWrapper: View {
+    @Environment(\.presentationMode) var presentationMode
+    var onGameEnd: (Int) -> Void
+
+    var body: some View {
+        NavigationView {
+            ZStack {
+                ContentView1 { finalScore in
+                    onGameEnd(finalScore) // Forward the score correctly
+                    presentationMode.wrappedValue.dismiss()
+                }
+                VStack {
+                    Spacer()
+                    Button("Exit Game") {
+                        onGameEnd(0) // Exit game with score 0 if user taps exit directly
+                        presentationMode.wrappedValue.dismiss()
+                    }
+                    .padding()
+                    .background(Color.red)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+                    .padding()
+                }
+            }
+            .navigationBarHidden(true)
         }
     }
 }
