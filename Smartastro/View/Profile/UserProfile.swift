@@ -59,6 +59,7 @@ struct UserProfile: View {
                         }
                         .buttonStyle(SmallInfoToggleStyle(isSelected: !showPersonalInfo))
                     }
+                    .padding()
 
                     if showPersonalInfo {
                         VStack(spacing: 20) {
@@ -149,14 +150,28 @@ struct SmallInfoToggleStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .padding(.vertical, 8) // Smaller vertical padding
-            .padding(.horizontal, 12) // Smaller horizontal padding
+            .padding(.vertical, 12) // Slightly increased padding for better spacing
+            .padding(.horizontal, 20)
             .frame(maxWidth: .infinity)
-            .background(isSelected ? Color.appAstro.opacity(0.3) : Color.gray.opacity(0.3))
-            .foregroundColor(.white)
-            .cornerRadius(10) // Smaller corner radius
-            .shadow(color: .black.opacity(0.2), radius: 3, x: 0, y: 2)
-            
+            .background(
+                ZStack {
+                    if isSelected {
+                        LinearGradient(
+                            gradient: Gradient(colors: [Color.blue, Color.purple]),
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                        .cornerRadius(15)
+                        .shadow(color: Color.blue.opacity(0.6), radius: 10, x: 0, y: 5)
+                    } else {
+                        Color.gray.opacity(0.2)
+                            .cornerRadius(15)
+                    }
+                }
+            )
+            .foregroundColor(isSelected ? .white : .gray)
+            .scaleEffect(configuration.isPressed ? 0.95 : 1.0) // Add a press animation
+            .animation(.spring(), value: configuration.isPressed) // Smooth scaling effect
     }
 }
 
