@@ -6,6 +6,7 @@ Cosmia is an innovative social networking application that blends astrology with
 ## Table of Contents
 - [Features](#features)
 - [Technologies Used](#technologies-used)
+- [Architecture](#architecture)
 - [Getting Started](#getting-started)
 - [Roadmap](#roadmap)
 - [Contribution](#contribution)
@@ -65,6 +66,35 @@ Cosmia is an innovative social networking application that blends astrology with
 ### Media Management
 - **Image Loading and Caching**: Asynchronous image loading and caching for albums and stories.
 
+## Architecture
+The project follows an MVVM (Model-View-ViewModel) architecture for better separation of concerns and scalability. The structure is as follows:
+
+```
+Smartastro/
+│── SmartastroApp.swift  # Entry point of the app
+│── Persistence/          # Persistence layer (e.g., CoreData, UserDefaults)
+│── Info/                # Configuration files and app metadata
+│── Assets/              # Image, font, and other resource files
+│── Model/               # Data models representing app entities
+│── ViewModel/           # ViewModel layer handling logic between Model and View
+│── View/                # UI components following SwiftUI principles
+│   ├── Home/
+│   ├── Login/
+│   ├── Profile/
+│   ├── Settings/
+│   ├── SignUp/
+│   ├── Stories/
+│   ├── cosmiagame/
+│── Helper/              # Utility functions and helper extensions
+│── font/                # Custom fonts for the UI
+│── Preview Content/      # Xcode Previews for UI development
+```
+
+### MVVM Breakdown:
+- **Model:** Represents the app's data layer, including API responses and local database models.
+- **ViewModel:** Acts as an intermediary between the Model and View, ensuring data binding and business logic execution.
+- **View:** Handles the presentation layer, including SwiftUI components for user interaction.
+
 ## Getting Started
 To get a local copy up and running, follow these steps:
 
@@ -110,3 +140,4 @@ Contributions are what make the open-source community such an amazing place to l
 
 ## License
 Distributed under the MIT License. See `LICENSE` for more information.
+
